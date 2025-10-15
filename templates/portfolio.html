@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Portfolio | Palmertech{% endblock %}
+{% block content %}
+<section class="highlight">
+    <h2>Portfolio</h2>
+    <div class="portfolio-grid">
+        <div class="portfolio-card">
+            <div class="portfolio-preview" style="--preview-image: url({{ url_for('static', filename='app-preview.png') }}); --preview-scale:0.26; --preview-top:-40px;">
+                <iframe src="https://picsbypalmer-247408919291.europe-west1.run.app" title="Pics By Palmer live preview" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                <button type="button" class="preview-btn" data-preview-url="https://picsbypalmer-247408919291.europe-west1.run.app" data-preview-title="Pics By Palmer">
+                    Live preview
+                </button>
+            </div>
+            <h4>Pics By Palmer <span class="portfolio-status live">(Live)</span></h4>
+            <p>Photography showcase featuring curated galleries and booking enquiries.</p>
+            <div class="portfolio-actions">
+                <button type="button" class="preview-btn link" data-preview-url="https://picsbypalmer-247408919291.europe-west1.run.app/" data-preview-title="Pics By Palmer">
+                    Live preview
+                </button>
+                <a href="https://picsbypalmer-247408919291.europe-west1.run.app/" target="_blank" rel="noopener" class="portfolio-visit">Visit site</a>
+            </div>
+        </div>
+        <div class="portfolio-card">
+            <div class="portfolio-preview" style="--preview-image: url({{ url_for('static', filename='code-screenshot.png') }}); --preview-scale:0.32; --preview-top:-60px;">
+                <iframe src="https://errant-arts-1048793772401.europe-west1.run.app/" title="Errant Arts live preview" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                <button type="button" class="preview-btn" data-preview-url="https://errant-arts-1048793772401.europe-west1.run.app/" data-preview-title="Errant Arts">
+                    Live preview
+                </button>
+            </div>
+            <h4>Errant Arts <span class="portfolio-status live">(Live)</span></h4>
+            <p>Creative collective portfolio highlighting digital art commissions.</p>
+            <div class="portfolio-actions">
+                <button type="button" class="preview-btn link" data-preview-url="https://errant-arts-1048793772401.europe-west1.run.app/" data-preview-title="Errant Arts">
+                    Live preview
+                </button>
+                <a href="https://errant-arts-1048793772401.europe-west1.run.app/" target="_blank" rel="noopener" class="portfolio-visit">Visit site</a>
+            </div>
+        </div>
+        <div class="portfolio-card">
+            <div class="portfolio-preview" style="--preview-image: url({{ url_for('static', filename='homegrubhub.png') }}); --preview-scale:0.30; --preview-top:-70px;">
+                <iframe src="https://homegrub-staging-495253095895.europe-west1.run.app/" title="HomeGrubHub live preview" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                <button type="button" class="preview-btn" data-preview-url="https://homegrub-staging-495253095895.europe-west1.run.app/" data-preview-title="HomeGrubHub">
+                    Live preview
+                </button>
+            </div>
+            <h4>HomeGrubHub <span class="portfolio-status unreleased">(Soon to be released)</span></h4>
+            <p>Kitchen companion for UK families with meal planning, smart shopping, and pantry tools.</p>
+            <div class="portfolio-actions">
+                <button type="button" class="preview-btn link" data-preview-url="https://homegrub-staging-495253095895.europe-west1.run.app/" data-preview-title="HomeGrubHub">
+                    Live preview
+                </button>
+                <a href="https://homegrub-staging-495253095895.europe-west1.run.app/" target="_blank" rel="noopener" class="portfolio-visit">Preview staging</a>
+            </div>
+        </div>
+        <div class="portfolio-card">
+            <img src="{{ url_for('static', filename='CBC.png') }}" alt="Crafted By Crazies" class="portfolio-img">
+            <h4>Crafted By Crazies <span class="portfolio-status dev">(Development Build)</span></h4>
+            <p>Bold, creative e-commerce platform for unique goods. Features product browsing, cart, and account management.</p>
+        </div>
+    </div>
+</section>
+<div id="portfolioPreviewModal" class="portfolio-modal" hidden>
+    <div class="portfolio-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="portfolioPreviewTitle">
+        <button type="button" class="portfolio-modal-close" aria-label="Close preview">&times;</button>
+        <h3 id="portfolioPreviewTitle" class="portfolio-modal-title"></h3>
+        <iframe src="" title="Project preview" loading="lazy"></iframe>
+    </div>
+</div>
+{% endblock %}

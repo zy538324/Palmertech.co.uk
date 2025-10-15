@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Private Project Enquiry | Palmertech{% endblock %}
+{% block content %}
+<section class="enquiry-section">
+    <h3>Private Project Enquiry</h3>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <form action="" method="post" class="enquiry-form">
+        <label>Name *</label>
+        <input type="text" name="name" required>
+        <label>Email address *</label>
+        <input type="email" name="email" required>
+        <label>Phone number</label>
+        <input type="tel" name="phone">
+        <label>Project Type *</label>
+        <select name="project_type" required>
+            <option value="Website">Website</option>
+            <option value="Web App">Web App</option>
+            <option value="E-commerce">E-commerce</option>
+            <option value="Portfolio">Portfolio</option>
+            <option value="Other">Other</option>
+        </select>
+        <label>Brief Project Description *</label>
+        <textarea name="description" required class="auto-expand" rows="3"></textarea>
+        <label>Key Features</label>
+        <div class="checkbox-group">
+            <label><input type="checkbox" name="features" value="Contact Form"> Contact Form</label>
+            <label><input type="checkbox" name="features" value="User Accounts"> User Accounts</label>
+            <label><input type="checkbox" name="features" value="E-commerce"> E-commerce</label>
+            <label><input type="checkbox" name="features" value="Blog"> Blog</label>
+            <label><input type="checkbox" name="features" value="Other"> Other</label>
+        </div>
+        <label>Preferred Technology *</label>
+        <select name="technology" required>
+            <option value="Python Flask">Python Flask</option>
+            <option value="PHP">PHP</option>
+            <option value="JavaScript">JavaScript</option>
+            <option value="C#">C#</option>
+            <option value="Other">Other</option>
+        </select>
+        <label>Estimated Budget (£)</label>
+        <input type="number" name="budget" min="0">
+        <label>Desired Deadline</label>
+        <input type="date" name="deadline">
+        <label>Additional Info</label>
+        <textarea name="additional" class="auto-expand" rows="2"></textarea>
+        <label><input type="checkbox" name="consent" value="yes" required> I allow this website to store my submission so they can respond to my inquiry.</label>
+        <button type="submit">Submit Enquiry</button>
+    </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.auto-expand').forEach(function(textarea) {
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}FAQ | Palmertech{% endblock %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What technologies do you use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "I specialize in Python (Flask) for web development, but I am also experienced with PHP, JavaScript, HTML, CSS, and C#. I can work with a variety of modern frameworks and technologies to suit your project’s needs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I start a project?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Contact me via the form or email, and we’ll discuss your requirements and next steps."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does a typical project take?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most projects are completed in 2–6 weeks, depending on complexity and requirements."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is your pricing structure?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pricing is based on project scope and estimated hours. Fixed quotes and hourly rates are available."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you offer ongoing support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, I provide maintenance, updates, and technical support after launch."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can you upgrade or fix my existing website/app?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Absolutely. I offer upgrades, bug fixes, and performance improvements for legacy systems."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will my site/app be mobile-friendly?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All projects are designed to be fully responsive and work on all devices."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do you handle project communication?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "I provide regular updates, clear timelines, and direct contact throughout the project."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What about security and data protection?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "As a CyberSecurity professional, I apply industry best practices for security, including HTTPS, secure authentication, and data privacy. Your project benefits from up-to-date security expertise and a strong commitment to protecting your data."
+      }
+    }
+  ]
+}
+</script>
+
+{% block content %}
+<section class="showcase">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-list" id="faq-list">
+        <div class="faq-item">
+            <button class="faq-question">What technologies do you use?</button>
+            <div class="faq-answer">
+                <p>I specialize in Python (Flask) for web development, but I am also experienced with PHP, JavaScript, HTML, CSS, and C#. I can work with a variety of modern frameworks and technologies to suit your project’s needs.</p>
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">How do I start a project?</button>
+            <div class="faq-answer">
+                <p>Contact me via the form or email, and we’ll discuss your requirements and next steps.</p>
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">How long does a typical project take?</button>
+            <div class="faq-answer">
+                <p>Most projects are completed in 2–6 weeks, depending on complexity and requirements.</p>
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">What is your pricing structure?</button>
+            <div class="faq-answer">
+                <p>Pricing is based on project scope and estimated hours. Fixed quotes and hourly rates are available.</p>
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">Do you offer ongoing support?</button>
+            <div class="faq-answer">
+                <p>Yes, I provide maintenance, updates, and technical support after launch.</p>
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">Can you upgrade or fix my existing website/app?</button>
+            <div class="faq-answer">
+                <p>Absolutely. I offer upgrades, bug fixes, and performance improvements for legacy systems.</p>
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">Will my site/app be mobile-friendly?</button>
+            <div class="faq-answer">
+                <p>All projects are designed to be fully responsive and work on all devices.</p>
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">How do you handle project communication?</button>
+            <div class="faq-answer">
+                <p>I provide regular updates, clear timelines, and direct contact throughout the project.</p>
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">What about security and data protection?</button>
+            <div class="faq-answer">
+                <p>As a CyberSecurity professional, I apply industry best practices for security, including HTTPS, secure authentication, and data privacy. Your project benefits from up-to-date security expertise and a strong commitment to protecting your data.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const faqQuestions = document.querySelectorAll('.faq-question');
+    faqQuestions.forEach(q => {
+        q.addEventListener('click', function() {
+            // Hide all answers
+            document.querySelectorAll('.faq-answer').forEach(a => a.style.display = 'none');
+            // Remove active from all
+            faqQuestions.forEach(btn => btn.classList.remove('active'));
+            // Show this answer
+            this.classList.add('active');
+            this.nextElementSibling.style.display = 'block';
+        });
+    });
+    // Hide all answers initially
+    document.querySelectorAll('.faq-answer').forEach(a => a.style.display = 'none');
+});
+</script>
+{% endblock %}
+{% endblock %}
