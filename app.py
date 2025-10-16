@@ -23,6 +23,8 @@ from reportlab.pdfgen import canvas
 
 from services.sendgrid_mailer import SendGridConfigurationError, SendGridMailer
 
+from services.sendgrid_mailer import SendGridConfigurationError, SendGridMailer
+
 load_dotenv()
 app = Flask(__name__)
 asgi_app = WsgiToAsgi(app)
