@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}Palmertech | Private Project Requirements Intake{% endblock %}
+
+{% block head %}
+<style>
+  .requirements-section {
+    background: linear-gradient(145deg, #1b1b1b, #222222);
+    padding: 4rem 1.5rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .requirements-card {
+    background-color: #2a2a2a;
+    border-radius: 1rem;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+    max-width: 760px;
+    width: 100%;
+    padding: 3rem;
+    color: #e6e6e6;
+  }
+
+  .requirements-card h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #00b36b;
+  }
+
+  .requirements-card p.section-intro {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #b5b5b5;
+  }
+
+  .requirements-card label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .requirements-card input,
+  .requirements-card select,
+  .requirements-card textarea {
+    width: 100%;
+    padding: 0.9rem;
+    border-radius: 0.6rem;
+    border: 1px solid #3a3a3a;
+    background-color: #1b1b1b;
+    color: #f2f2f2;
+    margin-bottom: 1.2rem;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .requirements-card input:focus,
+  .requirements-card select:focus,
+  .requirements-card textarea:focus {
+    outline: none;
+    border-color: #00b36b;
+    box-shadow: 0 0 0 2px rgba(0, 179, 107, 0.25);
+  }
+
+  .requirements-card button {
+    background-color: #00b36b;
+    border: none;
+    color: #0f0f0f;
+    padding: 0.95rem 1.6rem;
+    border-radius: 0.6rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .requirements-card button:hover {
+    background-color: #00a161;
+    transform: translateY(-1px);
+  }
+
+  .requirements-card button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .estimate-summary {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-radius: 0.8rem;
+    background: linear-gradient(135deg, rgba(0, 179, 107, 0.15), rgba(0, 179, 107, 0.05));
+    border: 1px solid rgba(0, 179, 107, 0.25);
+  }
+
+  .estimate-summary h2 {
+    font-size: 1.3rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .estimate-summary p {
+    margin-bottom: 0.6rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .estimate-summary p strong {
+    color: #00d084;
+  }
+
+  .estimate-grand-total {
+    font-size: 1.05rem;
+    border-top: 1px solid rgba(0, 179, 107, 0.35);
+    padding-top: 0.8rem;
+    margin-top: 0.8rem;
+  }
+
+  .requirements-meta {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: #888;
+    text-align: center;
+  }
+
+  .form-response {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    display: none;
+  }
+
+  .form-response.success {
+    display: block;
+    background: rgba(0, 179, 107, 0.12);
+    border: 1px solid rgba(0, 179, 107, 0.35);
+    color: #00d084;
+  }
+
+  .form-response.error {
+    display: block;
+    background: rgba(179, 0, 62, 0.12);
+    border: 1px solid rgba(179, 0, 62, 0.35);
+    color: #ff7396;
+  }
+
+  @media (max-width: 768px) {
+    .requirements-card {
+      padding: 2.25rem;
+    }
+  }
+
+  @media (max-width: 540px) {
+    .requirements-card {
+      padding: 2rem 1.5rem;
+    }
+
+    .requirements-card h1 {
+      font-size: 1.6rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="requirements-section">
+  <div class="requirements-card" role="form" aria-labelledby="requirements-title">
+    <h1 id="requirements-title">Website &amp; WebApp Project Requirements</h1>
+    <p class="section-intro">Provide as much detail as you can so we can prepare an accurate discovery and estimation session.</p>
+    <form id="requirements-form" method="POST" action="{{ url_for('submit_requirements') }}" novalidate>
+      <label for="name">Full Name *</label>
+      <input type="text" id="name" name="name" autocomplete="name" required>
+
+      <label for="email">Email Address *</label>
+      <input type="email" id="email" name="email" autocomplete="email" required>
+
+      <label for="company">Company / Brand Name</label>
+      <input type="text" id="company" name="company" autocomplete="organization">
+
+      <label for="project_type">Project Type *</label>
+      <select id="project_type" name="project_type" required>
+        <option value="">Select...</option>
+        <option value="Website Development">Website Development</option>
+        <option value="WebApp Development">WebApp Development</option>
+        <option value="API / Integration Work">API / Integration Work</option>
+        <option value="Security Consultancy">Security Consultancy</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label for="budget">Estimated Budget (optional)</label>
+      <select id="budget" name="budget">
+        <option value="">Select...</option>
+        <option value="Under £1,000">Under £1,000</option>
+        <option value="£1,000 – £5,000">£1,000 – £5,000</option>
+        <option value="£5,000 – £10,000">£5,000 – £10,000</option>
+        <option value="£10,000+">£10,000+</option>
+      </select>
+
+      <label for="timeline">Expected Delivery Timeline</label>
+      <input type="text" id="timeline" name="timeline" placeholder="e.g. 6–8 weeks">
+
+      <label for="estimated_hours">Estimated Build Hours *</label>
+      <input type="number" id="estimated_hours" name="estimated_hours" inputmode="decimal" min="0" step="0.5" value="20" required>
+
+      <label for="page_count">Expected Page Count *</label>
+      <input type="number" id="page_count" name="page_count" inputmode="numeric" min="0" step="1" value="{{ default_page_count }}" required>
+
+      <label for="requirements">Project Description / Requirements *</label>
+      <textarea id="requirements" name="requirements" rows="6" placeholder="Describe the functionality, goals, integrations, and design requirements..." required></textarea>
+
+      <button type="submit" id="requirements-submit">Submit Requirements</button>
+    </form>
+    <div
+      id="estimate-summary"
+      class="estimate-summary"
+      data-rate="{{ current_rate() | float }}"
+      data-base-fee="{{ PRICING_BASE_APP_FEE_VALUE | float }}"
+      data-per-page="{{ PRICING_PER_PAGE_FEE_VALUE | float }}"
+    >
+      <h2>Rough Investment Estimate</h2>
+      <p><strong>Current Rate:</strong> <span id="estimate-rate">{{ pricing_info['current_rate'] }}</span></p>
+      <p><strong>Maintenance Model:</strong> <span>{{ pricing_info['maintenance_model'] }}</span></p>
+      <p><strong>Baseline for {{ pricing_info['pages'] }} pages:</strong> <span id="estimate-maintenance-baseline">{{ pricing_info['maintenance_cost'] }}</span></p>
+      <p><strong>Development Total:</strong> <span id="estimate-development">–</span></p>
+      <p><strong>Maintenance Total:</strong> <span id="estimate-maintenance">–</span></p>
+      <p class="estimate-grand-total"><strong>Estimated Combined First Month:</strong> <span id="estimate-total">–</span></p>
+    </div>
+    <div id="form-response" class="form-response" role="status" aria-live="polite"></div>
+    <p class="requirements-meta">By submitting this form you consent to Palmertech processing your information for the purposes of project estimation and follow-up communications.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('requirements-form');
+    const responseBox = document.getElementById('form-response');
+    const submitButton = document.getElementById('requirements-submit');
+    const estimateSummary = document.getElementById('estimate-summary');
+    const hoursInput = document.getElementById('estimated_hours');
+    const pageInput = document.getElementById('page_count');
+    const developmentOutput = document.getElementById('estimate-development');
+    const maintenanceOutput = document.getElementById('estimate-maintenance');
+    const totalOutput = document.getElementById('estimate-total');
+
+    const rate = Number.parseFloat(estimateSummary.dataset.rate || '0');
+    const baseFee = Number.parseFloat(estimateSummary.dataset.baseFee || '0');
+    const perPage = Number.parseFloat(estimateSummary.dataset.perPage || '0');
+
+    const currencyFormatter = new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+      minimumFractionDigits: 2,
+    });
+
+    const calculateEstimate = (hoursValue, pagesValue) => {
+      const hours = Number.isFinite(hoursValue) && hoursValue >= 0 ? hoursValue : 0;
+      const pages = Number.isFinite(pagesValue) && pagesValue >= 0 ? pagesValue : 0;
+      const development = rate * hours;
+      const maintenance = Math.max(baseFee, perPage * pages);
+      return {
+        development,
+        maintenance,
+        total: development + maintenance,
+        pages,
+        hours,
+      };
+    };
+
+    const renderEstimate = (estimate) => {
+      developmentOutput.textContent = currencyFormatter.format(estimate.development);
+      maintenanceOutput.textContent = currencyFormatter.format(estimate.maintenance);
+      totalOutput.textContent = currencyFormatter.format(estimate.total);
+    };
+
+    const recalculate = () => {
+      const hoursValue = Number.parseFloat(hoursInput.value);
+      const pagesValue = Number.parseInt(pageInput.value, 10);
+      renderEstimate(calculateEstimate(hoursValue, pagesValue));
+    };
+
+    hoursInput.addEventListener('input', recalculate);
+    pageInput.addEventListener('input', recalculate);
+    recalculate();
+
+    const showMessage = (message, type) => {
+      responseBox.textContent = message;
+      responseBox.classList.remove('success', 'error');
+      if (type) {
+        responseBox.classList.add(type);
+      }
+      responseBox.style.display = 'block';
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showMessage('Submitting your requirements…', '');
+      submitButton.disabled = true;
+
+      try {
+        const formData = new FormData(form);
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          },
+          credentials: 'same-origin'
+        });
+
+        const payload = await response.json();
+        if (response.ok && payload.status === 'success') {
+          const currentEstimate = calculateEstimate(
+            Number.parseFloat(hoursInput.value),
+            Number.parseInt(pageInput.value, 10),
+          );
+          const successMessage = `${payload.message} Estimated development: ${currencyFormatter.format(currentEstimate.development)}; maintenance: ${currencyFormatter.format(currentEstimate.maintenance)}; combined first month: ${currencyFormatter.format(currentEstimate.total)}.`;
+          showMessage(successMessage, 'success');
+          form.reset();
+          recalculate();
+        } else {
+          const errorMessage = payload?.message || 'We could not submit your requirements at this time.';
+          showMessage(errorMessage, 'error');
+        }
+      } catch (error) {
+        console.error('Error submitting requirements form', error);
+        showMessage('A network error occurred. Please try again shortly.', 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+  });
+</script>
+{% endblock %}
