@@ -61,32 +61,54 @@
 .portfolio-preview {
     position: relative;
     width: 100%;
-    height: 200px;
+    aspect-ratio: 16 / 10;
     border-radius: 14px 14px 0 0;
     overflow: hidden;
-    background-color: #f5f8fb;
-    background-image: var(--preview-image);
-    background-position: top center;
-    background-size: cover;
+    background-color: #0d1117;
     border-bottom: 1px solid rgba(33,150,243,0.12);
     margin-bottom: 1em;
-    --preview-scale: 0.3;
-    --preview-top: 0px;
-    --preview-left: 0px;
-    --preview-width: 1280px;
-    --preview-height: 720px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.28);
+    --preview-scale: 0.28;
+    --preview-top: 0;
+    --preview-left: 0;
+    --preview-width: 1440px;
+    --preview-height: 900px;
 }
 .portfolio-preview iframe {
     position: absolute;
-    top: var(--preview-top);
-    left: var(--preview-left);
-    width: var(--preview-width);
-    height: var(--preview-height);
+    top: calc(var(--preview-top, 0) * 1px);
+    left: calc(var(--preview-left, 0) * 1px);
+    width: var(--preview-width, 1440px);
+    height: var(--preview-height, 900px);
     border: 0;
-    transform: scale(var(--preview-scale));
+    transform: scale(var(--preview-scale, 0.28));
     transform-origin: top left;
     pointer-events: none;
-    background: transparent;
+    background: #0d1117;
+}
+
+.portfolio-preview.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top, rgba(59,130,246,0.18), transparent 55%), #0b1729;
+}
+
+.portfolio-preview.placeholder .portfolio-placeholder {
+    text-align: center;
+    color: #cfe0ff;
+    padding: 1.5em;
+}
+
+.portfolio-preview.placeholder .portfolio-placeholder strong {
+    display: block;
+    font-size: 1.1em;
+    margin-bottom: 0.35em;
+}
+
+.portfolio-preview.placeholder .portfolio-placeholder span {
+    font-size: 0.9em;
+    color: rgba(207, 224, 255, 0.72);
 }
 .preview-btn {
     position: absolute;
@@ -176,6 +198,27 @@
     line-height: 1;
     cursor: pointer;
     color: #2196f3;
+}
+
+.pricing-overview p {
+    margin-bottom: 0.75em;
+}
+
+.pricing-overview .fine-print {
+    font-size: 0.9em;
+    color: #616161;
+}
+
+.pricing-intro {
+    margin-bottom: 1.5em;
+    padding: 1.25em;
+    background: linear-gradient(135deg, rgba(33,150,243,0.08), rgba(33,150,243,0.02));
+    border-radius: 12px;
+    border: 1px solid rgba(33,150,243,0.12);
+}
+
+.pricing-intro p {
+    margin-bottom: 0.75em;
 }
 body.modal-open {
     overflow: hidden;
