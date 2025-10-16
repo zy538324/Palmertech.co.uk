@@ -5,8 +5,8 @@ from decimal import Decimal, ROUND_HALF_UP
 
 BASE_RATE = Decimal("25.00")  # £/hr starting rate
 START_YEAR = 2025  # Adjust to the project start year when the policy begins
-BASE_APP_FEE = Decimal("25.00")  # £ base retainer for an app or site
-PER_PAGE_FEE = Decimal("10.00")  # £ maintenance per produced or maintained page
+BASE_APP_FEE = Decimal("35.00")  # £ minimum monthly retainer for an app or site
+PER_PAGE_FEE = Decimal("2.00")  # £ maintenance per produced or maintained page
 MAX_RATE = Decimal("40.00")  # £ cap until manual review
 FIRST_YEAR_INCREASE = Decimal("1.05")
 SUBSEQUENT_INCREASE = Decimal("1.10")
@@ -42,12 +42,13 @@ def current_rate(reference_date: date | None = None) -> Decimal:
 
 
 def maintenance_cost(page_count: int) -> Decimal:
-    """Calculate maintenance cost based on the base app fee plus per-page fee."""
+    """Calculate maintenance cost using the greater of the retainer or per-page total."""
 
     if page_count < 0:
         raise ValueError("page_count cannot be negative")
 
-    total = BASE_APP_FEE + (PER_PAGE_FEE * Decimal(page_count))
+    per_page_total = PER_PAGE_FEE * Decimal(page_count)
+    total = BASE_APP_FEE if BASE_APP_FEE >= per_page_total else per_page_total
     return _quantise(total)
 
 
@@ -65,7 +66,10 @@ def pricing_summary(page_count: int) -> dict[str, str | int]:
     maintenance = maintenance_cost(page_count)
     return {
         "current_rate": f"£{rate:.2f}/hour",
-        "maintenance_cost": f"£{maintenance:.2f} total",
+        "maintenance_cost": f"£{maintenance:.2f}",
+        "maintenance_model": (
+            f"£{BASE_APP_FEE:.2f} retainer or £{PER_PAGE_FEE:.2f} per page (whichever is greater)"
+        ),
         "pages": page_count,
         "base_app_fee": f"£{BASE_APP_FEE:.2f}",
         "per_page_fee": f"£{PER_PAGE_FEE:.2f}/page",

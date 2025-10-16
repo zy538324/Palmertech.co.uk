@@ -516,16 +516,11 @@ def submit_requirements():
 
 @app.route("/pricing")
 def pricing():
-    example_pages = 5
     rate = current_rate()
     return render_template(
         "pricing.html",
         development_rate=format_currency(rate),
         rate_decimal=rate,
-        maintenance_base=format_currency(BASE_APP_FEE),
-        maintenance_per_page=format_currency(PER_PAGE_FEE),
-        maintenance_example=format_currency(maintenance_cost(example_pages)),
-        maintenance_example_pages=example_pages,
     )
 
 
@@ -546,12 +541,7 @@ def terms():
 
 @app.route("/")
 def home():
-    return render_template(
-        "index.html",
-        development_rate=format_currency(current_rate()),
-        maintenance_base=format_currency(BASE_APP_FEE),
-        maintenance_per_page=format_currency(PER_PAGE_FEE),
-    )
+    return render_template("index.html")
 
 
 @app.route("/contact", methods=["GET", "POST"])
