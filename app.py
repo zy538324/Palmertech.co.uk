@@ -13,6 +13,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import requests
+import secrets
 import shutil
 from datetime import datetime
 
@@ -45,26 +46,63 @@ def archive_old_logs():
                 shutil.make_archive(zipname.replace('.zip',''), 'zip', LOGDIR, fname)
                 os.remove(fpath)
 archive_old_logs()
-app.secret_key = os.getenv('SECRET_KEY')
+
+secret_key = os.getenv('SECRET_KEY')
+if not secret_key:
+    secret_key = secrets.token_urlsafe(32)
+    # TODO: Provide persistent SECRET_KEY via environment in deployment.
+    app.logger.warning(
+        'SECRET_KEY is not configured; generated ephemeral key for session management. '
+        'Flash messages will reset on process restart.'
+    )
+
+app.secret_key = secret_key
 
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'no-reply@palmertech.co.uk')
 MAIL_OWNER_RECIPIENT = os.getenv('MAIL_OWNER_RECIPIENT', 'contact@palmertech.co.uk')
+PALMERTECH_REQUIREMENTS_TEMPLATE_ID = os.getenv('PALMERTECH_REQUIREMENTS_TEMPLATE_ID')
+PALMERTECH_REQUIREMENTS_RECIPIENT = os.getenv('PALMERTECH_REQUIREMENTS_RECIPIENT', 'projects@palmertech.co.uk')
 
 if not SENDGRID_API_KEY:
     app.logger.warning('SENDGRID_API_KEY not configured; email features disabled.')
+def _post_sendgrid_mail(payload: dict, context: str) -> bool:
+    """Dispatch the payload to SendGrid and capture any delivery errors."""
+    headers = {
+        'Authorization': f'Bearer {SENDGRID_API_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    try:
+        response = requests.post('https://api.sendgrid.com/v3/mail/send', json=payload, headers=headers, timeout=15)
+        response.raise_for_status()
+        return True
+    except requests.RequestException as exc:
+        app.logger.error('Error sending %s via SendGrid: %s', context, exc)
+        if getattr(exc, 'response', None) is not None:
+            app.logger.error('SendGrid response: %s', exc.response.text)
+        return False
 
 
 def send_email_via_sendgrid(subject, recipients, html_body, attachments=None, reply_to=None):
-    """Send an email using SendGrid's v3 API."""
+    """Send an HTML email using SendGrid's v3 Mail Send API."""
     if not SENDGRID_API_KEY:
         app.logger.error('SendGrid key missing; cannot send email.')
+        return False
+
+    if not recipients:
+        app.logger.error('No recipients supplied; cannot send email.')
+        return False
+
+    formatted_recipients = [{'email': address} for address in recipients if address]
+    if not formatted_recipients:
+        app.logger.error('Recipients list empty after sanitisation; aborting send.')
         return False
 
     payload = {
         'personalizations': [
             {
-                'to': [{'email': address} for address in recipients],
+                'to': formatted_recipients,
             }
         ],
         'from': {'email': MAIL_DEFAULT_SENDER, 'name': 'Palmertech'},
@@ -72,9 +110,9 @@ def send_email_via_sendgrid(subject, recipients, html_body, attachments=None, re
         'content': [
             {
                 'type': 'text/html',
-                'value': html_body
+                'value': html_body,
             }
-        ]
+        ],
     }
 
     if reply_to:
@@ -83,20 +121,38 @@ def send_email_via_sendgrid(subject, recipients, html_body, attachments=None, re
     if attachments:
         payload['attachments'] = attachments
 
-    headers = {
-        'Authorization': f'Bearer {SENDGRID_API_KEY}',
-        'Content-Type': 'application/json'
+    return _post_sendgrid_mail(payload, 'standard email')
+
+
+def send_dynamic_template_email(recipient, template_id, dynamic_data, reply_to=None):
+    """Send a transactional email using a dynamic SendGrid template."""
+    if not SENDGRID_API_KEY:
+        app.logger.error('SendGrid key missing; cannot send dynamic template email.')
+        return False
+
+    if not template_id:
+        app.logger.error('Template ID missing; cannot send dynamic template email.')
+        return False
+
+    if not recipient:
+        app.logger.error('Recipient missing; cannot send dynamic template email.')
+        return False
+
+    payload = {
+        'personalizations': [
+            {
+                'to': [{'email': recipient}],
+                'dynamic_template_data': dynamic_data,
+            }
+        ],
+        'from': {'email': MAIL_DEFAULT_SENDER, 'name': 'Palmertech Web Team'},
+        'template_id': template_id,
     }
 
-    try:
-        response = requests.post('https://api.sendgrid.com/v3/mail/send', json=payload, headers=headers, timeout=15)
-        response.raise_for_status()
-        return True
-    except requests.RequestException as exc:
-        app.logger.error('Error sending email via SendGrid: %s', exc)
-        if getattr(exc, 'response', None) is not None:
-            app.logger.error('SendGrid response: %s', exc.response.text)
-        return False
+    if reply_to:
+        payload['reply_to'] = {'email': reply_to}
+
+    return _post_sendgrid_mail(payload, 'dynamic template email')
 
 def generate_enquiry_pdf(data):
     app.logger.info('Generating enquiry PDF')
@@ -195,6 +251,71 @@ def testimonials():
 @app.route('/faq')
 def faq():
     return render_template('faq.html')
+
+
+@app.route('/project-requirements', methods=['GET'])
+def project_requirements():
+    """Render the private project requirements intake form."""
+    return render_template('project_requirements.html')
+
+
+@app.post('/api/palmertech/requirements')
+def submit_requirements():
+    """Accept and forward confidential project requirement submissions."""
+    required_fields = ('name', 'email', 'project_type', 'requirements')
+    form_data = {field: (request.form.get(field) or '').strip() for field in request.form}
+
+    missing = [field for field in required_fields if not form_data.get(field)]
+    if missing:
+        app.logger.warning('Project requirements submission missing fields: %s', ', '.join(missing))
+        return {
+            'status': 'error',
+            'message': 'Please complete all required fields before submitting the form.',
+        }, 400
+
+    safe_data = {
+        'name': str(escape(form_data.get('name', ''))),
+        'email': str(escape(form_data.get('email', ''))),
+        'company': str(escape(form_data.get('company', ''))),
+        'project_type': str(escape(form_data.get('project_type', ''))),
+        'budget': str(escape(form_data.get('budget', ''))),
+        'timeline': str(escape(form_data.get('timeline', ''))),
+        'requirements': str(escape(form_data.get('requirements', ''))),
+        'year': str(datetime.utcnow().year),
+    }
+
+    admin_email = PALMERTECH_REQUIREMENTS_RECIPIENT
+
+    admin_sent = send_dynamic_template_email(
+        recipient=admin_email,
+        template_id=PALMERTECH_REQUIREMENTS_TEMPLATE_ID,
+        dynamic_data=safe_data,
+        reply_to=safe_data['email'],
+    )
+
+    client_sent = send_dynamic_template_email(
+        recipient=safe_data['email'],
+        template_id=PALMERTECH_REQUIREMENTS_TEMPLATE_ID,
+        dynamic_data=safe_data,
+    )
+
+    if admin_sent and client_sent:
+        app.logger.info('Project requirements submission processed for %s', safe_data['email'])
+        return {
+            'status': 'success',
+            'message': 'Requirements submitted successfully.',
+        }
+
+    app.logger.error(
+        'Project requirements submission encountered an email delivery issue for %s (admin_sent=%s, client_sent=%s)',
+        safe_data['email'],
+        admin_sent,
+        client_sent,
+    )
+    return {
+        'status': 'warning',
+        'message': 'Your request was received but email notifications could not be sent. We will contact you shortly.',
+    }, 202
 
 @app.route('/pricing')
 def pricing():
