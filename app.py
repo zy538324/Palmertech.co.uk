@@ -12,9 +12,11 @@ import io
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
-import requests
+import secrets
 import shutil
 from datetime import datetime
+
+from services.sendgrid_mailer import SendGridConfigurationError, SendGridMailer
 
 load_dotenv()
 app = Flask(__name__)
@@ -45,57 +47,61 @@ def archive_old_logs():
                 shutil.make_archive(zipname.replace('.zip',''), 'zip', LOGDIR, fname)
                 os.remove(fpath)
 archive_old_logs()
-app.secret_key = os.getenv('SECRET_KEY')
+
+secret_key = os.getenv('SECRET_KEY')
+if not secret_key:
+    secret_key = secrets.token_urlsafe(32)
+    # TODO: Provide persistent SECRET_KEY via environment in deployment.
+    app.logger.warning(
+        'SECRET_KEY is not configured; generated ephemeral key for session management. '
+        'Flash messages will reset on process restart.'
+    )
+
+app.secret_key = secret_key
 
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'no-reply@palmertech.co.uk')
 MAIL_OWNER_RECIPIENT = os.getenv('MAIL_OWNER_RECIPIENT', 'contact@palmertech.co.uk')
+PALMERTECH_REQUIREMENTS_TEMPLATE_ID = os.getenv('PALMERTECH_REQUIREMENTS_TEMPLATE_ID')
+PALMERTECH_REQUIREMENTS_RECIPIENT = os.getenv('PALMERTECH_REQUIREMENTS_RECIPIENT', 'projects@palmertech.co.uk')
 
 if not SENDGRID_API_KEY:
     app.logger.warning('SENDGRID_API_KEY not configured; email features disabled.')
 
+mailer = SendGridMailer(
+    api_key=SENDGRID_API_KEY,
+    default_sender=MAIL_DEFAULT_SENDER,
+    logger=app.logger,
+)
 
-def send_email_via_sendgrid(subject, recipients, html_body, attachments=None, reply_to=None):
-    """Send an email using SendGrid's v3 API."""
-    if not SENDGRID_API_KEY:
-        app.logger.error('SendGrid key missing; cannot send email.')
-        return False
 
-    payload = {
-        'personalizations': [
-            {
-                'to': [{'email': address} for address in recipients],
-            }
-        ],
-        'from': {'email': MAIL_DEFAULT_SENDER, 'name': 'Palmertech'},
-        'subject': subject,
-        'content': [
-            {
-                'type': 'text/html',
-                'value': html_body
-            }
-        ]
-    }
-
-    if reply_to:
-        payload['reply_to'] = {'email': reply_to}
-
-    if attachments:
-        payload['attachments'] = attachments
-
-    headers = {
-        'Authorization': f'Bearer {SENDGRID_API_KEY}',
-        'Content-Type': 'application/json'
-    }
+def _send_html_email_safe(*, context: str, **kwargs) -> bool:
+    """Wrapper around SendGridMailer HTML send with defensive error handling."""
 
     try:
-        response = requests.post('https://api.sendgrid.com/v3/mail/send', json=payload, headers=headers, timeout=15)
-        response.raise_for_status()
-        return True
-    except requests.RequestException as exc:
-        app.logger.error('Error sending email via SendGrid: %s', exc)
-        if getattr(exc, 'response', None) is not None:
-            app.logger.error('SendGrid response: %s', exc.response.text)
+        result = mailer.send_html_email(**kwargs)
+        return result.ok
+    except (SendGridConfigurationError, ValueError) as exc:
+        app.logger.error('Failed to send %s: %s', context, exc)
+        return False
+
+
+def _send_dynamic_email_safe(*, context: str, **kwargs) -> bool:
+    """Wrapper around SendGridMailer dynamic template send with defensive error handling."""
+
+    if not kwargs.get('template_id'):
+        app.logger.error('Failed to send %s: missing template_id', context)
+        return False
+
+    if not kwargs.get('recipient'):
+        app.logger.error('Failed to send %s: missing recipient', context)
+        return False
+
+    try:
+        result = mailer.send_dynamic_template_email(**kwargs)
+        return result.ok
+    except (SendGridConfigurationError, ValueError) as exc:
+        app.logger.error('Failed to send %s: %s', context, exc)
         return False
 
 def generate_enquiry_pdf(data):
@@ -142,19 +148,21 @@ def private_enquiry(token):
             'disposition': 'attachment'
         }]
 
-        owner_email_sent = send_email_via_sendgrid(
+        owner_email_sent = _send_html_email_safe(
+            context='project enquiry owner notification',
             subject=f"New Project Enquiry from {form_data.get('name')}",
             recipients=[MAIL_OWNER_RECIPIENT],
             html_body='<p>Project enquiry attached.</p>',
             attachments=pdf_attachment,
-            reply_to=form_data.get('email')
+            reply_to=form_data.get('email'),
         )
 
-        customer_email_sent = send_email_via_sendgrid(
+        customer_email_sent = _send_html_email_safe(
+            context='project enquiry customer receipt',
             subject='Your Palmertech Project Enquiry Receipt',
             recipients=[form_data.get('email')],
             html_body='<p>Thank you for your enquiry! Please find your submitted details attached as a PDF. We will be in touch soon.</p>',
-            attachments=pdf_attachment
+            attachments=pdf_attachment,
         )
 
         if owner_email_sent and customer_email_sent:
@@ -195,6 +203,87 @@ def testimonials():
 @app.route('/faq')
 def faq():
     return render_template('faq.html')
+
+
+@app.route('/project-requirements', methods=['GET'])
+def project_requirements():
+    """Render the private project requirements intake form."""
+    return render_template('project_requirements.html')
+
+
+@app.post('/api/palmertech/requirements')
+def submit_requirements():
+    """Accept and forward confidential project requirement submissions."""
+    required_fields = ('name', 'email', 'project_type', 'requirements')
+    form_data = {field: (request.form.get(field) or '').strip() for field in request.form}
+
+    missing = [field for field in required_fields if not form_data.get(field)]
+    if missing:
+        app.logger.warning('Project requirements submission missing fields: %s', ', '.join(missing))
+        return {
+            'status': 'error',
+            'message': 'Please complete all required fields before submitting the form.',
+        }, 400
+
+    safe_data = {
+        'name': str(escape(form_data.get('name', ''))),
+        'email': str(escape(form_data.get('email', ''))),
+        'company': str(escape(form_data.get('company', ''))),
+        'project_type': str(escape(form_data.get('project_type', ''))),
+        'budget': str(escape(form_data.get('budget', ''))),
+        'timeline': str(escape(form_data.get('timeline', ''))),
+        'requirements': str(escape(form_data.get('requirements', ''))),
+        'year': str(datetime.utcnow().year),
+    }
+
+    admin_email = PALMERTECH_REQUIREMENTS_RECIPIENT
+
+    if not PALMERTECH_REQUIREMENTS_TEMPLATE_ID:
+        app.logger.error('Project requirements template ID is not configured.')
+        return {
+            'status': 'error',
+            'message': 'Email delivery is temporarily unavailable. Please try again shortly.',
+        }, 503
+
+    if not mailer.is_configured:
+        app.logger.error('Project requirements submission attempted without SendGrid configuration.')
+        return {
+            'status': 'error',
+            'message': 'Email delivery is temporarily unavailable. Please try again shortly.',
+        }, 503
+
+    admin_sent = _send_dynamic_email_safe(
+        context='project requirements admin notification',
+        recipient=admin_email,
+        template_id=PALMERTECH_REQUIREMENTS_TEMPLATE_ID,
+        dynamic_data=safe_data,
+        reply_to=safe_data['email'],
+    )
+
+    client_sent = _send_dynamic_email_safe(
+        context='project requirements client confirmation',
+        recipient=safe_data['email'],
+        template_id=PALMERTECH_REQUIREMENTS_TEMPLATE_ID,
+        dynamic_data=safe_data,
+    )
+
+    if admin_sent and client_sent:
+        app.logger.info('Project requirements submission processed for %s', safe_data['email'])
+        return {
+            'status': 'success',
+            'message': 'Requirements submitted successfully.',
+        }
+
+    app.logger.error(
+        'Project requirements submission encountered an email delivery issue for %s (admin_sent=%s, client_sent=%s)',
+        safe_data['email'],
+        admin_sent,
+        client_sent,
+    )
+    return {
+        'status': 'warning',
+        'message': 'Your request was received but email notifications could not be sent. We will contact you shortly.',
+    }, 202
 
 @app.route('/pricing')
 def pricing():
@@ -240,11 +329,17 @@ def contact():
             f"<p><strong>Message:</strong><br>{safe_message}</p>"
         )
 
-        if send_email_via_sendgrid(
+        if not mailer.is_configured:
+            app.logger.error('Contact form submission attempted without SendGrid configuration.')
+            flash('Email delivery is temporarily unavailable. Please try again later or reach us directly at contact@palmertech.co.uk.')
+            return redirect(url_for('contact'))
+
+        if _send_html_email_safe(
+            context='contact form notification',
             subject=f"New Contact Form Submission from {name}",
             recipients=[MAIL_OWNER_RECIPIENT],
             html_body=email_body,
-            reply_to=email
+            reply_to=email,
         ):
             flash('Thank you for getting in touch! Your message has been sent.')
         else:
