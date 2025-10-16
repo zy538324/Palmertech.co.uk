@@ -67,6 +67,22 @@ PALMERTECH_REQUIREMENTS_RECIPIENT = os.getenv('PALMERTECH_REQUIREMENTS_RECIPIENT
 
 if not SENDGRID_API_KEY:
     app.logger.warning('SENDGRID_API_KEY not configured; email features disabled.')
+def _post_sendgrid_mail(payload: dict, context: str) -> bool:
+    """Dispatch the payload to SendGrid and capture any delivery errors."""
+    headers = {
+        'Authorization': f'Bearer {SENDGRID_API_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    try:
+        response = requests.post('https://api.sendgrid.com/v3/mail/send', json=payload, headers=headers, timeout=15)
+        response.raise_for_status()
+        return True
+    except requests.RequestException as exc:
+        app.logger.error('Error sending %s via SendGrid: %s', context, exc)
+        if getattr(exc, 'response', None) is not None:
+            app.logger.error('SendGrid response: %s', exc.response.text)
+        return False
 
 mailer = SendGridMailer(
     api_key=SENDGRID_API_KEY,
@@ -103,6 +119,30 @@ def _send_dynamic_email_safe(*, context: str, **kwargs) -> bool:
     except (SendGridConfigurationError, ValueError) as exc:
         app.logger.error('Failed to send %s: %s', context, exc)
         return False
+
+    if not template_id:
+        app.logger.error('Template ID missing; cannot send dynamic template email.')
+        return False
+
+    if not recipient:
+        app.logger.error('Recipient missing; cannot send dynamic template email.')
+        return False
+
+    payload = {
+        'personalizations': [
+            {
+                'to': [{'email': recipient}],
+                'dynamic_template_data': dynamic_data,
+            }
+        ],
+        'from': {'email': MAIL_DEFAULT_SENDER, 'name': 'Palmertech Web Team'},
+        'template_id': template_id,
+    }
+
+    if reply_to:
+        payload['reply_to'] = {'email': reply_to}
+
+    return _post_sendgrid_mail(payload, 'dynamic template email')
 
 def generate_enquiry_pdf(data):
     app.logger.info('Generating enquiry PDF')
