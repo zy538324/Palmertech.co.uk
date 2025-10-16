@@ -9,6 +9,7 @@ import secrets
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from typing import Iterable, Mapping, Optional, Sequence
@@ -21,8 +22,14 @@ from markupsafe import escape
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-from services.sendgrid_mailer import SendGridConfigurationError, SendGridMailer
-
+from pricing import (
+    BASE_APP_FEE,
+    PER_PAGE_FEE,
+    current_rate,
+    format_currency,
+    maintenance_cost,
+    pricing_summary,
+)
 from services.sendgrid_mailer import SendGridConfigurationError, SendGridMailer
 
 load_dotenv()
@@ -138,6 +145,56 @@ app.secret_key = resolve_secret_key(app.logger)
 mailer = initialise_mailer(MAIL_SETTINGS, app.logger)
 
 
+@app.context_processor
+def inject_pricing_context() -> dict[str, object]:
+    """Expose pricing helpers and formatted constants to Jinja templates."""
+
+    return {
+        "current_rate": current_rate,
+        "maintenance_cost": maintenance_cost,
+        "pricing_summary": pricing_summary,
+        "format_currency": format_currency,
+        "PRICING_BASE_APP_FEE": format_currency(BASE_APP_FEE),
+        "PRICING_PER_PAGE_FEE": format_currency(PER_PAGE_FEE),
+        "PRICING_BASE_APP_FEE_VALUE": BASE_APP_FEE,
+        "PRICING_PER_PAGE_FEE_VALUE": PER_PAGE_FEE,
+    }
+
+
+def _parse_positive_int(value: Optional[str], *, default: int = 0) -> int:
+    """Return a positive integer parsed from the supplied value."""
+
+    if value is None:
+        return default
+
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+
+    return parsed if parsed >= 0 else default
+
+
+def _parse_positive_decimal(value: Optional[str]) -> Optional[Decimal]:
+    """Return a non-negative decimal parsed from the supplied value."""
+
+    if value in (None, ""):
+        return None
+
+    try:
+        parsed = Decimal(value)
+    except (InvalidOperation, ValueError):
+        return None
+
+    return parsed if parsed >= 0 else None
+
+
+def _quantise_currency(amount: Decimal) -> Decimal:
+    """Round a Decimal amount to two decimal places."""
+
+    return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
 def _send_html_email_safe(
     *,
     context: str,
@@ -220,6 +277,27 @@ def generate_enquiry_pdf(data: Mapping[str, str]) -> io.BytesIO:
     for key, value in data.items():
         pdf.drawString(50, y_position, f"{key}: {value}")
         y_position -= 25
+
+    try:
+        page_count = int(data.get("page_count", 0))
+    except (TypeError, ValueError):
+        page_count = 0
+
+    pricing_info = pricing_summary(page_count)
+    y_position -= 10
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(50, y_position, "Pricing Overview")
+    y_position -= 20
+    pdf.setFont("Helvetica", 11)
+    pdf.drawString(50, y_position, f"Development Rate: {pricing_info['current_rate']}")
+    y_position -= 20
+    pdf.drawString(
+        50,
+        y_position,
+        f"Maintenance ({pricing_info['pages']} pages): {pricing_info['maintenance_cost']}",
+    )
+    y_position -= 20
+    pdf.drawString(50, y_position, "Annual Adjustment: +5% after 1 year, +10% thereafter")
 
     pdf.save()
     buffer.seek(0)
@@ -329,14 +407,19 @@ def faq():
 def project_requirements():
     """Render the private project requirements intake form."""
 
-    return render_template("project_requirements.html")
+    default_page_count = 5
+    return render_template(
+        "project_requirements.html",
+        default_page_count=default_page_count,
+        pricing_info=pricing_summary(default_page_count),
+    )
 
 
 @app.post("/api/palmertech/requirements")
 def submit_requirements():
     """Accept and forward confidential project requirement submissions."""
 
-    required_fields = ("name", "email", "project_type", "requirements")
+    required_fields = ("name", "email", "project_type", "requirements", "estimated_hours", "page_count")
     form_data = {field: (request.form.get(field) or "").strip() for field in request.form}
 
     missing = [field for field in required_fields if not form_data.get(field)]
@@ -347,6 +430,19 @@ def submit_requirements():
             "message": "Please complete all required fields before submitting the form.",
         }, 400
 
+    page_count = _parse_positive_int(form_data.get("page_count"), default=0)
+    estimated_hours = _parse_positive_decimal(form_data.get("estimated_hours"))
+    if estimated_hours is None:
+        app.logger.warning("Project requirements submission missing or invalid estimated_hours value.")
+        return {
+            "status": "error",
+            "message": "Estimated hours must be a non-negative number.",
+        }, 400
+
+    rate = current_rate()
+    maintenance_total = maintenance_cost(page_count)
+    development_total = _quantise_currency(rate * estimated_hours)
+
     safe_data = {
         "name": str(escape(form_data.get("name", ""))),
         "email": str(escape(form_data.get("email", ""))),
@@ -356,6 +452,11 @@ def submit_requirements():
         "timeline": str(escape(form_data.get("timeline", ""))),
         "requirements": str(escape(form_data.get("requirements", ""))),
         "year": str(datetime.utcnow().year),
+        "estimated_hours": f"{estimated_hours}",
+        "page_count": str(page_count),
+        "development_rate": format_currency(rate),
+        "development_estimate": format_currency(development_total),
+        "maintenance_estimate": format_currency(maintenance_total),
     }
 
     if not MAIL_SETTINGS.requirements_template_id or not MAIL_SETTINGS.requirements_recipient:
@@ -392,6 +493,13 @@ def submit_requirements():
         return {
             "status": "success",
             "message": "Requirements submitted successfully.",
+            "estimate": {
+                "development_rate": safe_data["development_rate"],
+                "estimated_hours": safe_data["estimated_hours"],
+                "development_total": safe_data["development_estimate"],
+                "maintenance_total": safe_data["maintenance_estimate"],
+                "page_count": safe_data["page_count"],
+            },
         }
 
     app.logger.error(
@@ -408,7 +516,17 @@ def submit_requirements():
 
 @app.route("/pricing")
 def pricing():
-    return render_template("pricing.html")
+    example_pages = 5
+    rate = current_rate()
+    return render_template(
+        "pricing.html",
+        development_rate=format_currency(rate),
+        rate_decimal=rate,
+        maintenance_base=format_currency(BASE_APP_FEE),
+        maintenance_per_page=format_currency(PER_PAGE_FEE),
+        maintenance_example=format_currency(maintenance_cost(example_pages)),
+        maintenance_example_pages=example_pages,
+    )
 
 
 @app.route("/about")
@@ -428,7 +546,12 @@ def terms():
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        development_rate=format_currency(current_rate()),
+        maintenance_base=format_currency(BASE_APP_FEE),
+        maintenance_per_page=format_currency(PER_PAGE_FEE),
+    )
 
 
 @app.route("/contact", methods=["GET", "POST"])

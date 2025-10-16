@@ -84,6 +84,39 @@
     cursor: not-allowed;
   }
 
+  .estimate-summary {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-radius: 0.8rem;
+    background: linear-gradient(135deg, rgba(0, 179, 107, 0.15), rgba(0, 179, 107, 0.05));
+    border: 1px solid rgba(0, 179, 107, 0.25);
+  }
+
+  .estimate-summary h2 {
+    font-size: 1.3rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .estimate-summary p {
+    margin-bottom: 0.6rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .estimate-summary p strong {
+    color: #00d084;
+  }
+
+  .estimate-grand-total {
+    font-size: 1.05rem;
+    border-top: 1px solid rgba(0, 179, 107, 0.35);
+    padding-top: 0.8rem;
+    margin-top: 0.8rem;
+  }
+
   .requirements-meta {
     margin-top: 1.5rem;
     font-size: 0.85rem;
@@ -167,11 +200,31 @@
       <label for="timeline">Expected Delivery Timeline</label>
       <input type="text" id="timeline" name="timeline" placeholder="e.g. 6–8 weeks">
 
+      <label for="estimated_hours">Estimated Build Hours *</label>
+      <input type="number" id="estimated_hours" name="estimated_hours" inputmode="decimal" min="0" step="0.5" value="20" required>
+
+      <label for="page_count">Expected Page Count *</label>
+      <input type="number" id="page_count" name="page_count" inputmode="numeric" min="0" step="1" value="{{ default_page_count }}" required>
+
       <label for="requirements">Project Description / Requirements *</label>
       <textarea id="requirements" name="requirements" rows="6" placeholder="Describe the functionality, goals, integrations, and design requirements..." required></textarea>
 
       <button type="submit" id="requirements-submit">Submit Requirements</button>
     </form>
+    <div
+      id="estimate-summary"
+      class="estimate-summary"
+      data-rate="{{ current_rate() | float }}"
+      data-base-fee="{{ PRICING_BASE_APP_FEE_VALUE | float }}"
+      data-per-page="{{ PRICING_PER_PAGE_FEE_VALUE | float }}"
+    >
+      <h2>Rough Investment Estimate</h2>
+      <p><strong>Current Rate:</strong> <span id="estimate-rate">{{ pricing_info['current_rate'] }}</span></p>
+      <p><strong>Maintenance Baseline:</strong> <span id="estimate-maintenance-baseline">{{ pricing_info['maintenance_cost'] }} for {{ pricing_info['pages'] }} pages</span></p>
+      <p><strong>Development Total:</strong> <span id="estimate-development">–</span></p>
+      <p><strong>Maintenance Total:</strong> <span id="estimate-maintenance">–</span></p>
+      <p class="estimate-grand-total"><strong>Estimated Combined First Month:</strong> <span id="estimate-total">–</span></p>
+    </div>
     <div id="form-response" class="form-response" role="status" aria-live="polite"></div>
     <p class="requirements-meta">By submitting this form you consent to Palmertech processing your information for the purposes of project estimation and follow-up communications.</p>
   </div>
@@ -185,6 +238,52 @@
     const form = document.getElementById('requirements-form');
     const responseBox = document.getElementById('form-response');
     const submitButton = document.getElementById('requirements-submit');
+    const estimateSummary = document.getElementById('estimate-summary');
+    const hoursInput = document.getElementById('estimated_hours');
+    const pageInput = document.getElementById('page_count');
+    const developmentOutput = document.getElementById('estimate-development');
+    const maintenanceOutput = document.getElementById('estimate-maintenance');
+    const totalOutput = document.getElementById('estimate-total');
+
+    const rate = Number.parseFloat(estimateSummary.dataset.rate || '0');
+    const baseFee = Number.parseFloat(estimateSummary.dataset.baseFee || '0');
+    const perPage = Number.parseFloat(estimateSummary.dataset.perPage || '0');
+
+    const currencyFormatter = new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+      minimumFractionDigits: 2,
+    });
+
+    const calculateEstimate = (hoursValue, pagesValue) => {
+      const hours = Number.isFinite(hoursValue) && hoursValue >= 0 ? hoursValue : 0;
+      const pages = Number.isFinite(pagesValue) && pagesValue >= 0 ? pagesValue : 0;
+      const development = rate * hours;
+      const maintenance = baseFee + (perPage * pages);
+      return {
+        development,
+        maintenance,
+        total: development + maintenance,
+        pages,
+        hours,
+      };
+    };
+
+    const renderEstimate = (estimate) => {
+      developmentOutput.textContent = currencyFormatter.format(estimate.development);
+      maintenanceOutput.textContent = currencyFormatter.format(estimate.maintenance);
+      totalOutput.textContent = currencyFormatter.format(estimate.total);
+    };
+
+    const recalculate = () => {
+      const hoursValue = Number.parseFloat(hoursInput.value);
+      const pagesValue = Number.parseInt(pageInput.value, 10);
+      renderEstimate(calculateEstimate(hoursValue, pagesValue));
+    };
+
+    hoursInput.addEventListener('input', recalculate);
+    pageInput.addEventListener('input', recalculate);
+    recalculate();
 
     const showMessage = (message, type) => {
       responseBox.textContent = message;
@@ -213,8 +312,14 @@
 
         const payload = await response.json();
         if (response.ok && payload.status === 'success') {
+          const currentEstimate = calculateEstimate(
+            Number.parseFloat(hoursInput.value),
+            Number.parseInt(pageInput.value, 10),
+          );
+          const successMessage = `${payload.message} Estimated development: ${currencyFormatter.format(currentEstimate.development)}; maintenance: ${currencyFormatter.format(currentEstimate.maintenance)}; combined first month: ${currencyFormatter.format(currentEstimate.total)}.`;
+          showMessage(successMessage, 'success');
           form.reset();
-          showMessage(payload.message, 'success');
+          recalculate();
         } else {
           const errorMessage = payload?.message || 'We could not submit your requirements at this time.';
           showMessage(errorMessage, 'error');

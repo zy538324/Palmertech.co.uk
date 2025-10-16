@@ -3,89 +3,93 @@
 {% block content %}
 <section class="highlight pricing-cards">
     <h2>Pricing</h2>
+    <div class="pricing-intro">
+        <p><strong>Current Development Rate:</strong> {{ development_rate }} with automatic annual adjustments (5% after year one, 10% thereafter, capped at £40/hr).</p>
+        <p><strong>Ongoing Maintenance:</strong> {{ maintenance_base }} retainer + {{ maintenance_per_page }} per managed page. For {{ maintenance_example_pages }} pages this equals {{ maintenance_example }} each month.</p>
+    </div>
     <div class="card-grid responsive">
         <div class="price-card interactive" tabindex="0">
             <h3>Lower-Level Website Build</h3>
             <div class="card-front">
-                <p class="price">£700</p>
+                <p class="price">{{ format_currency(rate_decimal * 20) }}</p>
                 <p class="summary">Up to 5 pages, contact form, responsive design.</p>
             </div>
             <div class="card-back">
                 <p><strong>Typical build:</strong> 20 hours</p>
                 <p><strong>Typical time frame:</strong> 2–4 weeks</p>
-                <p><strong>Overall price:</strong> £700 (at £35/hr)</p>
+                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 20) }} at the current rate.</p>
             </div>
         </div>
         <div class="price-card interactive" tabindex="0">
             <h3>Python Web Development</h3>
             <div class="card-front">
-                <p class="price">£35/hr</p>
+                <p class="price">{{ development_rate }}</p>
                 <p class="summary">Modern, scalable web solutions.</p>
             </div>
             <div class="card-back">
                 <p><strong>Typical build:</strong> 18–28 hours</p>
                 <p><strong>Typical time frame:</strong> 2–4 weeks</p>
-                <p><strong>Overall price:</strong> £630–£980</p>
+                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 18) }} – {{ format_currency(rate_decimal * 28) }}</p>
             </div>
         </div>
         <div class="price-card interactive" tabindex="0">
             <h3>PHP / HTML Maintenance</h3>
             <div class="card-front">
-                <p class="price">£30/hr</p>
+                <p class="price">{{ development_rate }}</p>
                 <p class="summary">Site updates, bug fixes, support.</p>
             </div>
             <div class="card-back">
                 <p><strong>Typical build:</strong> 2–8 hours</p>
                 <p><strong>Typical time frame:</strong> 1–2 days</p>
-                <p><strong>Overall price:</strong> £60–£240</p>
+                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 2) }} – {{ format_currency(rate_decimal * 8) }}</p>
             </div>
         </div>
         <div class="price-card interactive" tabindex="0">
             <h3>Full-Stack Python + DB</h3>
             <div class="card-front">
-                <p class="price">£45/hr</p>
+                <p class="price">{{ development_rate }}</p>
                 <p class="summary">End-to-end dev with database.</p>
             </div>
             <div class="card-back">
                 <p><strong>Typical build:</strong> 25–40 hours</p>
                 <p><strong>Typical time frame:</strong> 3–5 weeks</p>
-                <p><strong>Overall price:</strong> £1,125–£1,800</p>
+                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 25) }} – {{ format_currency(rate_decimal * 40) }}</p>
             </div>
         </div>
         <div class="price-card interactive" tabindex="0">
             <h3>Flutter Mobile Apps</h3>
             <div class="card-front">
-                <p class="price">£40/hr</p>
+                <p class="price">{{ development_rate }}</p>
                 <p class="summary">Cross-platform mobile apps.</p>
             </div>
             <div class="card-back">
                 <p><strong>Typical build:</strong> 30–50 hours</p>
                 <p><strong>Typical time frame:</strong> 4–8 weeks</p>
-                <p><strong>Overall price:</strong> £1,200–£2,000</p>
+                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 30) }} – {{ format_currency(rate_decimal * 50) }}</p>
             </div>
         </div>
         <div class="price-card interactive" tabindex="0">
             <h3>C# Development</h3>
             <div class="card-front">
-                <p class="price">£35/hr</p>
+                <p class="price">{{ development_rate }}</p>
                 <p class="summary">Desktop/web solutions in C#.</p>
             </div>
             <div class="card-back">
                 <p><strong>Typical build:</strong> 20–35 hours</p>
                 <p><strong>Typical time frame:</strong> 3–6 weeks</p>
-                <p><strong>Overall price:</strong> £700–£1,225</p>
+                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 20) }} – {{ format_currency(rate_decimal * 35) }}</p>
             </div>
         </div>
         <div class="price-card interactive" tabindex="0">
             <h3>Full Ecosystem (Web + Mobile)</h3>
             <div class="card-front">
-                <p class="price">£50/hr</p>
+                <p class="price">{{ development_rate }}</p>
                 <p class="summary">Integrated web & mobile.</p>
             </div>
             <div class="card-back">
                 <p><strong>Typical build:</strong> 60–120 hours</p>
                 <p><strong>Typical time frame:</strong> 8–16 weeks</p>
-                <p><strong>Overall price:</strong> £3,000–£6,000</p>
+                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 60) }} – {{ format_currency(rate_decimal * 120) }}</p>
             </div>
         </div>
     </div>

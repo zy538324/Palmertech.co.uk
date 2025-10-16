@@ -199,6 +199,27 @@
     cursor: pointer;
     color: #2196f3;
 }
+
+.pricing-overview p {
+    margin-bottom: 0.75em;
+}
+
+.pricing-overview .fine-print {
+    font-size: 0.9em;
+    color: #616161;
+}
+
+.pricing-intro {
+    margin-bottom: 1.5em;
+    padding: 1.25em;
+    background: linear-gradient(135deg, rgba(33,150,243,0.08), rgba(33,150,243,0.02));
+    border-radius: 12px;
+    border: 1px solid rgba(33,150,243,0.12);
+}
+
+.pricing-intro p {
+    margin-bottom: 0.75em;
+}
 body.modal-open {
     overflow: hidden;
 }
