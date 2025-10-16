@@ -55,13 +55,62 @@ PALMERTECH_REQUIREMENTS_RECIPIENT = os.getenv('PALMERTECH_REQUIREMENTS_RECIPIENT
 
 if not SENDGRID_API_KEY:
     app.logger.warning('SENDGRID_API_KEY not configured; email features disabled.')
+def _post_sendgrid_mail(payload: dict, context: str) -> bool:
+    """Dispatch the payload to SendGrid and capture any delivery errors."""
+    headers = {
+        'Authorization': f'Bearer {SENDGRID_API_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    try:
+        response = requests.post('https://api.sendgrid.com/v3/mail/send', json=payload, headers=headers, timeout=15)
+        response.raise_for_status()
+        return True
+    except requests.RequestException as exc:
+        app.logger.error('Error sending %s via SendGrid: %s', context, exc)
+        if getattr(exc, 'response', None) is not None:
+            app.logger.error('SendGrid response: %s', exc.response.text)
+        return False
 
 
 def send_email_via_sendgrid(subject, recipients, html_body, attachments=None, reply_to=None):
-    """Send an email using SendGrid's v3 API."""
+    """Send an HTML email using SendGrid's v3 Mail Send API."""
     if not SENDGRID_API_KEY:
         app.logger.error('SendGrid key missing; cannot send email.')
         return False
+
+    if not recipients:
+        app.logger.error('No recipients supplied; cannot send email.')
+        return False
+
+    formatted_recipients = [{'email': address} for address in recipients if address]
+    if not formatted_recipients:
+        app.logger.error('Recipients list empty after sanitisation; aborting send.')
+        return False
+
+    payload = {
+        'personalizations': [
+            {
+                'to': formatted_recipients,
+            }
+        ],
+        'from': {'email': MAIL_DEFAULT_SENDER, 'name': 'Palmertech'},
+        'subject': subject,
+        'content': [
+            {
+                'type': 'text/html',
+                'value': html_body,
+            }
+        ],
+    }
+
+    if reply_to:
+        payload['reply_to'] = {'email': reply_to}
+
+    if attachments:
+        payload['attachments'] = attachments
+
+    return _post_sendgrid_mail(payload, 'standard email')
 
 
 def send_dynamic_template_email(recipient, template_id, dynamic_data, reply_to=None):
@@ -72,6 +121,10 @@ def send_dynamic_template_email(recipient, template_id, dynamic_data, reply_to=N
 
     if not template_id:
         app.logger.error('Template ID missing; cannot send dynamic template email.')
+        return False
+
+    if not recipient:
+        app.logger.error('Recipient missing; cannot send dynamic template email.')
         return False
 
     payload = {
@@ -88,57 +141,7 @@ def send_dynamic_template_email(recipient, template_id, dynamic_data, reply_to=N
     if reply_to:
         payload['reply_to'] = {'email': reply_to}
 
-    headers = {
-        'Authorization': f'Bearer {SENDGRID_API_KEY}',
-        'Content-Type': 'application/json',
-    }
-
-    try:
-        response = requests.post('https://api.sendgrid.com/v3/mail/send', json=payload, headers=headers, timeout=15)
-        response.raise_for_status()
-        return True
-    except requests.RequestException as exc:
-        app.logger.error('Error sending dynamic template email via SendGrid: %s', exc)
-        if getattr(exc, 'response', None) is not None:
-            app.logger.error('SendGrid response: %s', exc.response.text)
-        return False
-
-    payload = {
-        'personalizations': [
-            {
-                'to': [{'email': address} for address in recipients],
-            }
-        ],
-        'from': {'email': MAIL_DEFAULT_SENDER, 'name': 'Palmertech'},
-        'subject': subject,
-        'content': [
-            {
-                'type': 'text/html',
-                'value': html_body
-            }
-        ]
-    }
-
-    if reply_to:
-        payload['reply_to'] = {'email': reply_to}
-
-    if attachments:
-        payload['attachments'] = attachments
-
-    headers = {
-        'Authorization': f'Bearer {SENDGRID_API_KEY}',
-        'Content-Type': 'application/json'
-    }
-
-    try:
-        response = requests.post('https://api.sendgrid.com/v3/mail/send', json=payload, headers=headers, timeout=15)
-        response.raise_for_status()
-        return True
-    except requests.RequestException as exc:
-        app.logger.error('Error sending email via SendGrid: %s', exc)
-        if getattr(exc, 'response', None) is not None:
-            app.logger.error('SendGrid response: %s', exc.response.text)
-        return False
+    return _post_sendgrid_mail(payload, 'dynamic template email')
 
 def generate_enquiry_pdf(data):
     app.logger.info('Generating enquiry PDF')
