@@ -13,6 +13,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import requests
+import secrets
 import shutil
 from datetime import datetime
 
@@ -45,7 +46,17 @@ def archive_old_logs():
                 shutil.make_archive(zipname.replace('.zip',''), 'zip', LOGDIR, fname)
                 os.remove(fpath)
 archive_old_logs()
-app.secret_key = os.getenv('SECRET_KEY')
+
+secret_key = os.getenv('SECRET_KEY')
+if not secret_key:
+    secret_key = secrets.token_urlsafe(32)
+    # TODO: Provide persistent SECRET_KEY via environment in deployment.
+    app.logger.warning(
+        'SECRET_KEY is not configured; generated ephemeral key for session management. '
+        'Flash messages will reset on process restart.'
+    )
+
+app.secret_key = secret_key
 
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'no-reply@palmertech.co.uk')
