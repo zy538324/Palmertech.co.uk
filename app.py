@@ -12,10 +12,11 @@ import io
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
-import requests
 import secrets
 import shutil
 from datetime import datetime
+
+from services.sendgrid_mailer import SendGridConfigurationError, SendGridMailer
 
 load_dotenv()
 app = Flask(__name__)
@@ -83,51 +84,40 @@ def _post_sendgrid_mail(payload: dict, context: str) -> bool:
             app.logger.error('SendGrid response: %s', exc.response.text)
         return False
 
+mailer = SendGridMailer(
+    api_key=SENDGRID_API_KEY,
+    default_sender=MAIL_DEFAULT_SENDER,
+    logger=app.logger,
+)
 
-def send_email_via_sendgrid(subject, recipients, html_body, attachments=None, reply_to=None):
-    """Send an HTML email using SendGrid's v3 Mail Send API."""
-    if not SENDGRID_API_KEY:
-        app.logger.error('SendGrid key missing; cannot send email.')
+
+def _send_html_email_safe(*, context: str, **kwargs) -> bool:
+    """Wrapper around SendGridMailer HTML send with defensive error handling."""
+
+    try:
+        result = mailer.send_html_email(**kwargs)
+        return result.ok
+    except (SendGridConfigurationError, ValueError) as exc:
+        app.logger.error('Failed to send %s: %s', context, exc)
         return False
 
-    if not recipients:
-        app.logger.error('No recipients supplied; cannot send email.')
+
+def _send_dynamic_email_safe(*, context: str, **kwargs) -> bool:
+    """Wrapper around SendGridMailer dynamic template send with defensive error handling."""
+
+    if not kwargs.get('template_id'):
+        app.logger.error('Failed to send %s: missing template_id', context)
         return False
 
-    formatted_recipients = [{'email': address} for address in recipients if address]
-    if not formatted_recipients:
-        app.logger.error('Recipients list empty after sanitisation; aborting send.')
+    if not kwargs.get('recipient'):
+        app.logger.error('Failed to send %s: missing recipient', context)
         return False
 
-    payload = {
-        'personalizations': [
-            {
-                'to': formatted_recipients,
-            }
-        ],
-        'from': {'email': MAIL_DEFAULT_SENDER, 'name': 'Palmertech'},
-        'subject': subject,
-        'content': [
-            {
-                'type': 'text/html',
-                'value': html_body,
-            }
-        ],
-    }
-
-    if reply_to:
-        payload['reply_to'] = {'email': reply_to}
-
-    if attachments:
-        payload['attachments'] = attachments
-
-    return _post_sendgrid_mail(payload, 'standard email')
-
-
-def send_dynamic_template_email(recipient, template_id, dynamic_data, reply_to=None):
-    """Send a transactional email using a dynamic SendGrid template."""
-    if not SENDGRID_API_KEY:
-        app.logger.error('SendGrid key missing; cannot send dynamic template email.')
+    try:
+        result = mailer.send_dynamic_template_email(**kwargs)
+        return result.ok
+    except (SendGridConfigurationError, ValueError) as exc:
+        app.logger.error('Failed to send %s: %s', context, exc)
         return False
 
     if not template_id:
@@ -198,19 +188,21 @@ def private_enquiry(token):
             'disposition': 'attachment'
         }]
 
-        owner_email_sent = send_email_via_sendgrid(
+        owner_email_sent = _send_html_email_safe(
+            context='project enquiry owner notification',
             subject=f"New Project Enquiry from {form_data.get('name')}",
             recipients=[MAIL_OWNER_RECIPIENT],
             html_body='<p>Project enquiry attached.</p>',
             attachments=pdf_attachment,
-            reply_to=form_data.get('email')
+            reply_to=form_data.get('email'),
         )
 
-        customer_email_sent = send_email_via_sendgrid(
+        customer_email_sent = _send_html_email_safe(
+            context='project enquiry customer receipt',
             subject='Your Palmertech Project Enquiry Receipt',
             recipients=[form_data.get('email')],
             html_body='<p>Thank you for your enquiry! Please find your submitted details attached as a PDF. We will be in touch soon.</p>',
-            attachments=pdf_attachment
+            attachments=pdf_attachment,
         )
 
         if owner_email_sent and customer_email_sent:
@@ -286,14 +278,30 @@ def submit_requirements():
 
     admin_email = PALMERTECH_REQUIREMENTS_RECIPIENT
 
-    admin_sent = send_dynamic_template_email(
+    if not PALMERTECH_REQUIREMENTS_TEMPLATE_ID:
+        app.logger.error('Project requirements template ID is not configured.')
+        return {
+            'status': 'error',
+            'message': 'Email delivery is temporarily unavailable. Please try again shortly.',
+        }, 503
+
+    if not mailer.is_configured:
+        app.logger.error('Project requirements submission attempted without SendGrid configuration.')
+        return {
+            'status': 'error',
+            'message': 'Email delivery is temporarily unavailable. Please try again shortly.',
+        }, 503
+
+    admin_sent = _send_dynamic_email_safe(
+        context='project requirements admin notification',
         recipient=admin_email,
         template_id=PALMERTECH_REQUIREMENTS_TEMPLATE_ID,
         dynamic_data=safe_data,
         reply_to=safe_data['email'],
     )
 
-    client_sent = send_dynamic_template_email(
+    client_sent = _send_dynamic_email_safe(
+        context='project requirements client confirmation',
         recipient=safe_data['email'],
         template_id=PALMERTECH_REQUIREMENTS_TEMPLATE_ID,
         dynamic_data=safe_data,
@@ -361,11 +369,17 @@ def contact():
             f"<p><strong>Message:</strong><br>{safe_message}</p>"
         )
 
-        if send_email_via_sendgrid(
+        if not mailer.is_configured:
+            app.logger.error('Contact form submission attempted without SendGrid configuration.')
+            flash('Email delivery is temporarily unavailable. Please try again later or reach us directly at contact@palmertech.co.uk.')
+            return redirect(url_for('contact'))
+
+        if _send_html_email_safe(
+            context='contact form notification',
             subject=f"New Contact Form Submission from {name}",
             recipients=[MAIL_OWNER_RECIPIENT],
             html_body=email_body,
-            reply_to=email
+            reply_to=email,
         ):
             flash('Thank you for getting in touch! Your message has been sent.')
         else:
