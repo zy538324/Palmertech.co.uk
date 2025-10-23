@@ -19,6 +19,8 @@ from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from itsdangerous import URLSafeSerializer
 from markupsafe import escape
+import requests
+from requests.exceptions import RequestException
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
@@ -64,6 +66,30 @@ class MailSettings:
 
 MAIL_SETTINGS = MailSettings.from_env()
 mailer: Optional[SendGridMailer] = None
+
+
+# CAPTCHA configuration for contact form protection
+
+
+@dataclass(frozen=True)
+class CaptchaSettings:
+    """Container for hCaptcha configuration."""
+
+    site_key: Optional[str]
+    secret_key: Optional[str]
+
+    @classmethod
+    def from_env(cls) -> "CaptchaSettings":
+        """Load hCaptcha settings from the environment."""
+
+        return cls(
+            site_key=os.getenv("HCAPTCHA_SITE_KEY"),
+            secret_key=os.getenv("HCAPTCHA_SECRET_KEY"),
+        )
+
+
+CAPTCHA_SETTINGS = CaptchaSettings.from_env()
+HCAPTCHA_VERIFY_ENDPOINT = "https://hcaptcha.com/siteverify"
 
 
 # Contact form spam-mitigation settings
@@ -247,6 +273,42 @@ def _validate_contact_form_submission(
             app.logger.info("Contact form submission throttled due to rapid repeat attempts.")
             return False, "Please wait a moment before submitting again."
 
+    return True, None
+
+
+def _verify_hcaptcha(response_token: Optional[str], remote_addr: Optional[str]) -> tuple[bool, Optional[str]]:
+    """Validate the hCaptcha response token with the verification endpoint."""
+
+    if not CAPTCHA_SETTINGS.site_key or not CAPTCHA_SETTINGS.secret_key:
+        app.logger.warning(
+            "hCaptcha keys are not configured; contact form submissions are unprotected.")
+        return True, None
+
+    if not response_token:
+        app.logger.info("Missing hCaptcha response token; prompting visitor to retry.")
+        return False, "Please complete the CAPTCHA challenge to continue."
+
+    payload = {
+        "response": response_token,
+        "secret": CAPTCHA_SETTINGS.secret_key,
+    }
+
+    if remote_addr:
+        payload["remoteip"] = remote_addr
+
+    try:
+        verification_response = requests.post(HCAPTCHA_VERIFY_ENDPOINT, data=payload, timeout=5)
+        verification_response.raise_for_status()
+        result = verification_response.json()
+    except (RequestException, ValueError) as exc:
+        app.logger.error("hCaptcha verification failed: %s", exc)
+        return False, "We could not verify the CAPTCHA. Please try again."
+
+    if not result.get("success"):
+        app.logger.info("hCaptcha challenge unsuccessful: %s", result)
+        return False, "CAPTCHA verification failed. Please try again."
+
+    app.logger.debug("hCaptcha verification succeeded for remote %s", remote_addr)
     return True, None
 
 
@@ -615,6 +677,16 @@ def contact():
             session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
             return redirect(url_for("contact"))
 
+        captcha_response = request.form.get("h-captcha-response")
+        remote_addr = request.headers.get("X-Forwarded-For", request.remote_addr)
+        captcha_valid, captcha_message = _verify_hcaptcha(captcha_response, remote_addr)
+
+        if not captcha_valid:
+            flash(captcha_message or "CAPTCHA verification failed. Please try again.")
+            session.pop(CONTACT_FORM_TOKEN_SESSION_KEY, None)
+            session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
+            return redirect(url_for("contact"))
+
         name = (request.form.get("name") or "").strip()
         email = (request.form.get("email") or "").strip()
         phone = (request.form.get("phone") or "").strip()
@@ -672,7 +744,11 @@ def contact():
         session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
         return redirect(url_for("contact"))
 
-    return render_template("contact.html", form_token=_issue_contact_form_token())
+    return render_template(
+        "contact.html",
+        form_token=_issue_contact_form_token(),
+        captcha_site_key=CAPTCHA_SETTINGS.site_key,
+    )
 
 
 if __name__ == "__main__":
