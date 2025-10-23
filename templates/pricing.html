@@ -1,98 +1,105 @@
 {% extends "base.html" %}
 {% block title %}Pricing | Palmertech{% endblock %}
 {% block content %}
-<section class="highlight pricing-cards">
-    <h2>Pricing</h2>
-    <div class="pricing-intro">
-        <p>Explore indicative packages below. Each card summarises typical build hours and investment ranges based on the current development rate.</p>
+<section id="pricing" class="section pricing">
+    <header class="section-header">
+        <h1>Pricing</h1>
+        <p>Simple, transparent pricing — no tech speak required. Pick a starting point, then add only what you need.</p>
+    </header>
+
+    <div class="pricing-grid">
+        <article class="card pricing-card">
+            <h2 class="pricing-title">Starter Website</h2>
+            <p class="pricing-from"><strong>from £500</strong></p>
+            <ul class="pricing-list">
+                <li>Up to 5 pages (Home, About, Services, Contact, Privacy)</li>
+                <li>Mobile-friendly, SSL, contact form</li>
+                <li>Basic on-page SEO (titles &amp; meta)</li>
+                <li>Content load: up to 10 images</li>
+                <li>1 round of revisions</li>
+                <li><em>Timeline:</em> 1–2 weeks (content provided)</li>
+            </ul>
+            <a class="btn btn-primary" href="/contact">Request a quote</a>
+        </article>
+
+        <article class="card pricing-card">
+            <h2 class="pricing-title">Business Site</h2>
+            <p class="pricing-from"><strong>£950–£1,450</strong></p>
+            <ul class="pricing-list">
+                <li>8–10 pages, light brand tailoring (colour &amp; typography)</li>
+                <li>Blog setup, lead form + simple automation</li>
+                <li>Performance tuning</li>
+                <li>Basic accessibility (headings, contrast, alt text)</li>
+                <li>2 rounds of revisions</li>
+                <li><em>Timeline:</em> 2–4 weeks</li>
+            </ul>
+            <a class="btn btn-primary" href="/contact">Request a quote</a>
+        </article>
+
+        <article class="card pricing-card">
+            <h2 class="pricing-title">Online Shop (WooCommerce)</h2>
+            <p class="pricing-from"><strong>£1,650–£3,250</strong></p>
+            <ul class="pricing-list">
+                <li>Payment gateway &amp; shipping zones</li>
+                <li>Up to 25 products set up</li>
+                <li>Essential e-commerce SEO</li>
+                <li>Transactional email styling</li>
+                <li>2 rounds of revisions + launch support</li>
+                <li><em>Timeline:</em> 3–5 weeks</li>
+            </ul>
+            <a class="btn btn-primary" href="/contact">Request a quote</a>
+        </article>
     </div>
-    <div class="card-grid responsive">
-        <div class="price-card interactive" tabindex="0">
-            <h3>Lower-Level Website Build</h3>
-            <div class="card-front">
-                <p class="price">{{ format_currency(rate_decimal * 20) }}</p>
-                <p class="summary">Up to 5 pages, contact form, responsive design.</p>
-            </div>
-            <div class="card-back">
-                <p><strong>Typical build:</strong> 20 hours</p>
-                <p><strong>Typical time frame:</strong> 2–4 weeks</p>
-                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 20) }} at the current rate.</p>
-            </div>
-        </div>
-        <div class="price-card interactive" tabindex="0">
-            <h3>Python Web Development</h3>
-            <div class="card-front">
-                <p class="price">{{ development_rate }}</p>
-                <p class="summary">Modern, scalable web solutions.</p>
-            </div>
-            <div class="card-back">
-                <p><strong>Typical build:</strong> 18–28 hours</p>
-                <p><strong>Typical time frame:</strong> 2–4 weeks</p>
-                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 18) }} – {{ format_currency(rate_decimal * 28) }}</p>
-            </div>
-        </div>
-        <div class="price-card interactive" tabindex="0">
-            <h3>PHP / HTML Maintenance</h3>
-            <div class="card-front">
-                <p class="price">{{ development_rate }}</p>
-                <p class="summary">Site updates, bug fixes, support.</p>
-            </div>
-            <div class="card-back">
-                <p><strong>Typical build:</strong> 2–8 hours</p>
-                <p><strong>Typical time frame:</strong> 1–2 days</p>
-                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 2) }} – {{ format_currency(rate_decimal * 8) }}</p>
-            </div>
-        </div>
-        <div class="price-card interactive" tabindex="0">
-            <h3>Full-Stack Python + DB</h3>
-            <div class="card-front">
-                <p class="price">{{ development_rate }}</p>
-                <p class="summary">End-to-end dev with database.</p>
-            </div>
-            <div class="card-back">
-                <p><strong>Typical build:</strong> 25–40 hours</p>
-                <p><strong>Typical time frame:</strong> 3–5 weeks</p>
-                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 25) }} – {{ format_currency(rate_decimal * 40) }}</p>
-            </div>
-        </div>
-        <div class="price-card interactive" tabindex="0">
-            <h3>Flutter Mobile Apps</h3>
-            <div class="card-front">
-                <p class="price">{{ development_rate }}</p>
-                <p class="summary">Cross-platform mobile apps.</p>
-            </div>
-            <div class="card-back">
-                <p><strong>Typical build:</strong> 30–50 hours</p>
-                <p><strong>Typical time frame:</strong> 4–8 weeks</p>
-                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 30) }} – {{ format_currency(rate_decimal * 50) }}</p>
-            </div>
-        </div>
-        <div class="price-card interactive" tabindex="0">
-            <h3>C# Development</h3>
-            <div class="card-front">
-                <p class="price">{{ development_rate }}</p>
-                <p class="summary">Desktop/web solutions in C#.</p>
-            </div>
-            <div class="card-back">
-                <p><strong>Typical build:</strong> 20–35 hours</p>
-                <p><strong>Typical time frame:</strong> 3–6 weeks</p>
-                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 20) }} – {{ format_currency(rate_decimal * 35) }}</p>
-            </div>
-        </div>
-        <div class="price-card interactive" tabindex="0">
-            <h3>Full Ecosystem (Web + Mobile)</h3>
-            <div class="card-front">
-                <p class="price">{{ development_rate }}</p>
-                <p class="summary">Integrated web & mobile.</p>
-            </div>
-            <div class="card-back">
-                <p><strong>Typical build:</strong> 60–120 hours</p>
-                <p><strong>Typical time frame:</strong> 8–16 weeks</p>
-                <p><strong>Overall price:</strong> {{ format_currency(rate_decimal * 60) }} – {{ format_currency(rate_decimal * 120) }}</p>
-            </div>
+
+    <div class="addons">
+        <h3>Common Add-ons</h3>
+        <ul class="bullet-list">
+            <li>Extra templated page — <strong>£60/page</strong></li>
+            <li>Copywriting: light edit — <strong>£25/page</strong>; write-from-scratch — <strong>from £60/page</strong></li>
+            <li>Logo refresh / colour &amp; type kit — <strong>£120</strong></li>
+            <li>Booking/contact automation — <strong>£75</strong></li>
+            <li>Speed pass (images, cache/CDN) — <strong>£95</strong></li>
+            <li>Priority / rush (&lt;7 working days) — <strong>+25%</strong></li>
+        </ul>
+    </div>
+
+    <div class="care-plans">
+        <h3>Care Plans (Monthly)</h3>
+        <div class="pricing-grid">
+            <article class="card">
+                <h4>Essential Care</h4>
+                <p class="pricing-from"><strong>£35/mo</strong></p>
+                <ul class="pricing-list">
+                    <li>Core/theme/plugin updates</li>
+                    <li>Uptime &amp; security monitoring</li>
+                    <li>Monthly backup</li>
+                    <li>Email support (24–72h)</li>
+                </ul>
+            </article>
+            <article class="card">
+                <h4>Business Care</h4>
+                <p class="pricing-from"><strong>£65/mo</strong></p>
+                <ul class="pricing-list">
+                    <li>Everything in Essential</li>
+                    <li><strong>+ 30 mins</strong> of changes / month (rollover 1 month)</li>
+                    <li>Quarterly performance &amp; SEO check</li>
+                </ul>
+            </article>
+            <article class="card">
+                <h4>Growth Care</h4>
+                <p class="pricing-from"><strong>£120/mo</strong></p>
+                <ul class="pricing-list">
+                    <li>Everything in Business</li>
+                    <li><strong>+ 90 mins</strong> of changes / month</li>
+                    <li>Monthly report (traffic, leads) &amp; proactive improvements</li>
+                </ul>
+            </article>
         </div>
     </div>
-    <p class="pricing-note">Hover or tap a card to see estimated build hours and time frames. For custom projects, contact for a quote.<br>
-        *£25 is an hourly rate unless agreed to a predefined fee.</p>
+
+    <footer class="pricing-notes">
+        <p><strong>Hourly rate:</strong> £25/hour. Timelines assume content is supplied promptly. Prices are starting estimates and may vary with scope. Domains, hosting and third-party fees are shown up-front — no surprises.</p>
+        <p>Serving Wellington, Taunton &amp; the wider Somerset area. UK-based, friendly and responsive service.</p>
+    </footer>
 </section>
 {% endblock %}
