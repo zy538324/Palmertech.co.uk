@@ -13,6 +13,11 @@
       {% endif %}
     {% endwith %}
     <form action="/contact" method="post" class="contact-form">
+        <div class="hp-field" aria-hidden="true">
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+        </div>
+        <input type="hidden" name="form_token" value="{{ form_token }}">
         <label>Name *</label><input type="text" name="name" required><br>
         <label>Email address *</label><input type="email" name="email" required><br>
         <label>Phone number *</label><input type="tel" name="phone" required><br>
