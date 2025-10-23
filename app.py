@@ -99,6 +99,10 @@ CONTACT_FORM_LAST_SUBMISSION_KEY = "contact_form_last_submission"
 CONTACT_FORM_TOKEN_TTL = timedelta(hours=2)
 CONTACT_FORM_SUBMISSION_COOLDOWN = timedelta(seconds=45)
 CONTACT_FORM_MIN_MESSAGE_LENGTH = 10
+CONTACT_FORM_CHALLENGE_SESSION_KEY = "contact_form_challenge_question"
+CONTACT_FORM_CHALLENGE_ANSWER_KEY = "contact_form_challenge_answer"
+CONTACT_FORM_CHALLENGE_MIN = 2
+CONTACT_FORM_CHALLENGE_MAX = 11
 
 
 def configure_logging(flask_app: Flask) -> None:
@@ -280,8 +284,6 @@ def _verify_hcaptcha(response_token: Optional[str], remote_addr: Optional[str]) 
     """Validate the hCaptcha response token with the verification endpoint."""
 
     if not CAPTCHA_SETTINGS.site_key or not CAPTCHA_SETTINGS.secret_key:
-        app.logger.warning(
-            "hCaptcha keys are not configured; contact form submissions are unprotected.")
         return True, None
 
     if not response_token:
@@ -310,6 +312,44 @@ def _verify_hcaptcha(response_token: Optional[str], remote_addr: Optional[str]) 
 
     app.logger.debug("hCaptcha verification succeeded for remote %s", remote_addr)
     return True, None
+
+
+def _issue_fallback_challenge() -> str:
+    """Generate a deterministic maths prompt when hCaptcha is unavailable."""
+
+    if not app.config.get("_FALLBACK_CHALLENGE_WARNED"):
+        app.logger.warning(
+            "hCaptcha keys missing; defaulting to in-app maths challenge for contact form.")
+        app.config["_FALLBACK_CHALLENGE_WARNED"] = True
+
+    range_width = CONTACT_FORM_CHALLENGE_MAX - CONTACT_FORM_CHALLENGE_MIN + 1
+    first_term = secrets.randbelow(range_width) + CONTACT_FORM_CHALLENGE_MIN
+    second_term = secrets.randbelow(range_width) + CONTACT_FORM_CHALLENGE_MIN
+    answer = first_term + second_term
+    session[CONTACT_FORM_CHALLENGE_SESSION_KEY] = f"What is {first_term} + {second_term}?"
+    session[CONTACT_FORM_CHALLENGE_ANSWER_KEY] = str(answer)
+    return session[CONTACT_FORM_CHALLENGE_SESSION_KEY]
+
+
+def _validate_fallback_challenge(submitted_answer: Optional[str]) -> tuple[bool, Optional[str]]:
+    """Confirm the visitor solved the maths prompt when hCaptcha is disabled."""
+
+    expected_answer = session.get(CONTACT_FORM_CHALLENGE_ANSWER_KEY)
+    if not expected_answer:
+        app.logger.warning("Fallback challenge missing from session; regenerating prompt.")
+        return False, "Please refresh the page and try again."
+
+    if not submitted_answer:
+        app.logger.info("Fallback challenge answer missing; prompting visitor to retry.")
+        return False, "Please answer the anti-spam question to continue."
+
+    if secrets.compare_digest(expected_answer, submitted_answer.strip()):
+        session.pop(CONTACT_FORM_CHALLENGE_SESSION_KEY, None)
+        session.pop(CONTACT_FORM_CHALLENGE_ANSWER_KEY, None)
+        return True, None
+
+    app.logger.info("Fallback challenge answered incorrectly; request rejected.")
+    return False, "The anti-spam answer was incorrect. Please try again."
 
 
 def _send_html_email_safe(
@@ -663,6 +703,8 @@ def home():
 
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
+    captcha_available = bool(CAPTCHA_SETTINGS.site_key and CAPTCHA_SETTINGS.secret_key)
+
     if request.method == "POST":
         token = request.form.get("form_token")
         honeypot_value = request.form.get("company")
@@ -677,15 +719,25 @@ def contact():
             session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
             return redirect(url_for("contact"))
 
-        captcha_response = request.form.get("h-captcha-response")
-        remote_addr = request.headers.get("X-Forwarded-For", request.remote_addr)
-        captcha_valid, captcha_message = _verify_hcaptcha(captcha_response, remote_addr)
+        if captcha_available:
+            captcha_response = request.form.get("h-captcha-response")
+            remote_addr = request.headers.get("X-Forwarded-For", request.remote_addr)
+            captcha_valid, captcha_message = _verify_hcaptcha(captcha_response, remote_addr)
 
-        if not captcha_valid:
-            flash(captcha_message or "CAPTCHA verification failed. Please try again.")
-            session.pop(CONTACT_FORM_TOKEN_SESSION_KEY, None)
-            session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
-            return redirect(url_for("contact"))
+            if not captcha_valid:
+                flash(captcha_message or "CAPTCHA verification failed. Please try again.")
+                session.pop(CONTACT_FORM_TOKEN_SESSION_KEY, None)
+                session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
+                return redirect(url_for("contact"))
+        else:
+            challenge_answer = request.form.get("challenge_answer")
+            challenge_valid, challenge_message = _validate_fallback_challenge(challenge_answer)
+
+            if not challenge_valid:
+                flash(challenge_message or "Please retry the anti-spam question.")
+                session.pop(CONTACT_FORM_TOKEN_SESSION_KEY, None)
+                session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
+                return redirect(url_for("contact"))
 
         name = (request.form.get("name") or "").strip()
         email = (request.form.get("email") or "").strip()
@@ -744,10 +796,18 @@ def contact():
         session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
         return redirect(url_for("contact"))
 
+    fallback_challenge_question = None
+    if captcha_available:
+        session.pop(CONTACT_FORM_CHALLENGE_SESSION_KEY, None)
+        session.pop(CONTACT_FORM_CHALLENGE_ANSWER_KEY, None)
+    else:
+        fallback_challenge_question = _issue_fallback_challenge()
+
     return render_template(
         "contact.html",
         form_token=_issue_contact_form_token(),
         captcha_site_key=CAPTCHA_SETTINGS.site_key,
+        fallback_challenge_question=fallback_challenge_question,
     )
 
 

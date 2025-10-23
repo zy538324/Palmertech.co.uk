@@ -1301,6 +1301,12 @@ main {
     margin-top: 1.5em;
 }
 
+.form-hint {
+    margin-top: 0.4em;
+    font-size: 0.9em;
+    color: #2b4c7e;
+}
+
 .sr-only {
     position: absolute;
     width: 1px;

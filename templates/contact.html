@@ -27,6 +27,12 @@
             <span id="captcha-instructions" class="sr-only">This step prevents automated spam submissions.</span>
             <div class="h-captcha" data-sitekey="{{ captcha_site_key }}" data-callback="onHCaptchaSuccess" aria-describedby="captcha-instructions"></div>
         </div>
+        {% elif fallback_challenge_question %}
+        <div class="captcha-wrapper">
+            <label for="challenge_answer">{{ fallback_challenge_question }}</label>
+            <input type="text" id="challenge_answer" name="challenge_answer" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
+            <p class="form-hint">Human check: add the two numbers together. Bots struggle here.</p>
+        </div>
         {% endif %}
         <label><input type="checkbox" name="consent" value="yes" required> I allow this website to store my submission so they can respond to my inquiry.</label><br>
         <button type="submit">Submit</button>
