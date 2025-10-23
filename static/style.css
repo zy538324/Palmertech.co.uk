@@ -1279,6 +1279,15 @@ main {
     font-weight: 500;
     color: #009688;
 }
+
+.contact-form .hp-field {
+    /* Honeypot field kept off-screen to deter automated spam bots */
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
 .contact-form input, .contact-form textarea {
     width: 100%;
     padding: 0.7em;
