@@ -281,6 +281,123 @@
 .pricing-intro p {
     margin-bottom: 0.75em;
 }
+
+/* Pricing page layout */
+.section.pricing {
+    padding: 3em 0;
+}
+
+.section.pricing .section-header {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto 2.5em auto;
+}
+
+.section.pricing .section-header h1 {
+    margin-bottom: 0.5em;
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5em;
+    margin-bottom: 2.5em;
+}
+
+.pricing-card {
+    padding: 2em;
+    border-radius: 16px;
+    border: 1px solid rgba(33,150,243,0.18);
+    box-shadow: 0 12px 30px rgba(15, 76, 129, 0.08);
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.pricing-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5em;
+}
+
+.pricing-from {
+    font-size: 1.25rem;
+    color: #0d47a1;
+    margin-bottom: 1em;
+}
+
+.pricing-list {
+    margin-bottom: 1.75em;
+    padding-left: 1.2em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.pricing-list li {
+    line-height: 1.45;
+}
+
+.addons,
+.care-plans {
+    margin-bottom: 3em;
+}
+
+.addons h3,
+.care-plans h3 {
+    font-size: 1.75rem;
+    margin-bottom: 0.75em;
+}
+
+.bullet-list {
+    list-style: disc;
+    margin-left: 1.5em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+}
+
+.care-plans .card {
+    padding: 1.5em;
+    border-radius: 16px;
+    border: 1px solid rgba(33,150,243,0.14);
+    box-shadow: 0 8px 24px rgba(15, 76, 129, 0.06);
+}
+
+.care-plans .card h4 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5em;
+}
+
+.pricing-notes {
+    max-width: 860px;
+    margin: 0 auto;
+    font-size: 0.95rem;
+    color: #37474f;
+    text-align: center;
+}
+
+.pricing-notes p + p {
+    margin-top: 0.75em;
+}
+
+@media (max-width: 640px) {
+    .pricing-card {
+        padding: 1.6em;
+    }
+
+    .pricing-title {
+        font-size: 1.35rem;
+    }
+
+    .pricing-from {
+        font-size: 1.15rem;
+    }
+
+    .section.pricing .section-header {
+        margin-bottom: 2em;
+    }
+}
 body.modal-open {
     overflow: hidden;
 }
@@ -1162,6 +1279,15 @@ main {
     font-weight: 500;
     color: #009688;
 }
+
+.contact-form .hp-field {
+    /* Honeypot field kept off-screen to deter automated spam bots */
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
 .contact-form input, .contact-form textarea {
     width: 100%;
     padding: 0.7em;
@@ -1170,6 +1296,27 @@ main {
     border-radius: 6px;
     font-size: 1em;
     background: #e3f2fd;
+}
+.captcha-wrapper {
+    margin-top: 1.5em;
+}
+
+.form-hint {
+    margin-top: 0.4em;
+    font-size: 0.9em;
+    color: #2b4c7e;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 .contact-form button {
     margin-top: 1em;
@@ -1234,4 +1381,11 @@ footer {
 .social-icon:hover {
     transform: scale(1.15);
     color: #43e97b;
+}
+.pricing-notes {
+    max-width: 860px;
+    margin: 0 auto;
+    font-size: 0.95rem;
+    color: #37474f;
+    text-align: center;
 }

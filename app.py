@@ -8,7 +8,7 @@ import os
 import secrets
 import shutil
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
@@ -16,9 +16,11 @@ from typing import Iterable, Mapping, Optional, Sequence
 
 from asgiref.wsgi import WsgiToAsgi
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from itsdangerous import URLSafeSerializer
 from markupsafe import escape
+import requests
+from requests.exceptions import RequestException
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
@@ -64,6 +66,43 @@ class MailSettings:
 
 MAIL_SETTINGS = MailSettings.from_env()
 mailer: Optional[SendGridMailer] = None
+
+
+# CAPTCHA configuration for contact form protection
+
+
+@dataclass(frozen=True)
+class CaptchaSettings:
+    """Container for hCaptcha configuration."""
+
+    site_key: Optional[str]
+    secret_key: Optional[str]
+
+    @classmethod
+    def from_env(cls) -> "CaptchaSettings":
+        """Load hCaptcha settings from the environment."""
+
+        return cls(
+            site_key=os.getenv("HCAPTCHA_SITE_KEY"),
+            secret_key=os.getenv("HCAPTCHA_SECRET_KEY"),
+        )
+
+
+CAPTCHA_SETTINGS = CaptchaSettings.from_env()
+HCAPTCHA_VERIFY_ENDPOINT = "https://hcaptcha.com/siteverify"
+
+
+# Contact form spam-mitigation settings
+CONTACT_FORM_TOKEN_SESSION_KEY = "contact_form_token"
+CONTACT_FORM_TIME_SESSION_KEY = "contact_form_issued_at"
+CONTACT_FORM_LAST_SUBMISSION_KEY = "contact_form_last_submission"
+CONTACT_FORM_TOKEN_TTL = timedelta(hours=2)
+CONTACT_FORM_SUBMISSION_COOLDOWN = timedelta(seconds=45)
+CONTACT_FORM_MIN_MESSAGE_LENGTH = 10
+CONTACT_FORM_CHALLENGE_SESSION_KEY = "contact_form_challenge_question"
+CONTACT_FORM_CHALLENGE_ANSWER_KEY = "contact_form_challenge_answer"
+CONTACT_FORM_CHALLENGE_MIN = 2
+CONTACT_FORM_CHALLENGE_MAX = 11
 
 
 def configure_logging(flask_app: Flask) -> None:
@@ -193,6 +232,124 @@ def _quantise_currency(amount: Decimal) -> Decimal:
     """Round a Decimal amount to two decimal places."""
 
     return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def _issue_contact_form_token() -> str:
+    """Generate and persist a fresh anti-spam token for the contact form."""
+
+    token = secrets.token_urlsafe(32)
+    issued_at = datetime.now(timezone.utc)
+    session[CONTACT_FORM_TOKEN_SESSION_KEY] = token
+    session[CONTACT_FORM_TIME_SESSION_KEY] = issued_at.timestamp()
+    return token
+
+
+def _validate_contact_form_submission(
+    *, token: Optional[str], honeypot_value: Optional[str]
+) -> tuple[bool, Optional[str]]:
+    """Validate anti-spam defences for the contact form submission."""
+
+    now_utc = datetime.now(timezone.utc)
+
+    if honeypot_value and honeypot_value.strip():
+        app.logger.warning("Contact form honeypot field populated; blocking submission.")
+        return False, "Your submission could not be processed. Please contact us directly."
+
+    session_token = session.get(CONTACT_FORM_TOKEN_SESSION_KEY)
+    if not token or not session_token or not secrets.compare_digest(token, session_token):
+        app.logger.info("Contact form token mismatch or missing; prompting visitor to retry.")
+        return False, "Your session has expired. Please refresh the page and try again."
+
+    issued_at_ts = session.get(CONTACT_FORM_TIME_SESSION_KEY)
+    if not isinstance(issued_at_ts, (int, float)):
+        app.logger.info("Contact form token missing timestamp metadata; requesting resubmission.")
+        return False, "Your session has expired. Please refresh the page and try again."
+
+    issued_at = datetime.fromtimestamp(issued_at_ts, tz=timezone.utc)
+    if now_utc - issued_at > CONTACT_FORM_TOKEN_TTL:
+        app.logger.info("Contact form token expired; prompting visitor to refresh page.")
+        return False, "Your session has expired. Please refresh the page and try again."
+
+    last_submission_ts = session.get(CONTACT_FORM_LAST_SUBMISSION_KEY)
+    if isinstance(last_submission_ts, (int, float)):
+        last_submission = datetime.fromtimestamp(last_submission_ts, tz=timezone.utc)
+        if now_utc - last_submission < CONTACT_FORM_SUBMISSION_COOLDOWN:
+            app.logger.info("Contact form submission throttled due to rapid repeat attempts.")
+            return False, "Please wait a moment before submitting again."
+
+    return True, None
+
+
+def _verify_hcaptcha(response_token: Optional[str], remote_addr: Optional[str]) -> tuple[bool, Optional[str]]:
+    """Validate the hCaptcha response token with the verification endpoint."""
+
+    if not CAPTCHA_SETTINGS.site_key or not CAPTCHA_SETTINGS.secret_key:
+        return True, None
+
+    if not response_token:
+        app.logger.info("Missing hCaptcha response token; prompting visitor to retry.")
+        return False, "Please complete the CAPTCHA challenge to continue."
+
+    payload = {
+        "response": response_token,
+        "secret": CAPTCHA_SETTINGS.secret_key,
+    }
+
+    if remote_addr:
+        payload["remoteip"] = remote_addr
+
+    try:
+        verification_response = requests.post(HCAPTCHA_VERIFY_ENDPOINT, data=payload, timeout=5)
+        verification_response.raise_for_status()
+        result = verification_response.json()
+    except (RequestException, ValueError) as exc:
+        app.logger.error("hCaptcha verification failed: %s", exc)
+        return False, "We could not verify the CAPTCHA. Please try again."
+
+    if not result.get("success"):
+        app.logger.info("hCaptcha challenge unsuccessful: %s", result)
+        return False, "CAPTCHA verification failed. Please try again."
+
+    app.logger.debug("hCaptcha verification succeeded for remote %s", remote_addr)
+    return True, None
+
+
+def _issue_fallback_challenge() -> str:
+    """Generate a deterministic maths prompt when hCaptcha is unavailable."""
+
+    if not app.config.get("_FALLBACK_CHALLENGE_WARNED"):
+        app.logger.warning(
+            "hCaptcha keys missing; defaulting to in-app maths challenge for contact form.")
+        app.config["_FALLBACK_CHALLENGE_WARNED"] = True
+
+    range_width = CONTACT_FORM_CHALLENGE_MAX - CONTACT_FORM_CHALLENGE_MIN + 1
+    first_term = secrets.randbelow(range_width) + CONTACT_FORM_CHALLENGE_MIN
+    second_term = secrets.randbelow(range_width) + CONTACT_FORM_CHALLENGE_MIN
+    answer = first_term + second_term
+    session[CONTACT_FORM_CHALLENGE_SESSION_KEY] = f"What is {first_term} + {second_term}?"
+    session[CONTACT_FORM_CHALLENGE_ANSWER_KEY] = str(answer)
+    return session[CONTACT_FORM_CHALLENGE_SESSION_KEY]
+
+
+def _validate_fallback_challenge(submitted_answer: Optional[str]) -> tuple[bool, Optional[str]]:
+    """Confirm the visitor solved the maths prompt when hCaptcha is disabled."""
+
+    expected_answer = session.get(CONTACT_FORM_CHALLENGE_ANSWER_KEY)
+    if not expected_answer:
+        app.logger.warning("Fallback challenge missing from session; regenerating prompt.")
+        return False, "Please refresh the page and try again."
+
+    if not submitted_answer:
+        app.logger.info("Fallback challenge answer missing; prompting visitor to retry.")
+        return False, "Please answer the anti-spam question to continue."
+
+    if secrets.compare_digest(expected_answer, submitted_answer.strip()):
+        session.pop(CONTACT_FORM_CHALLENGE_SESSION_KEY, None)
+        session.pop(CONTACT_FORM_CHALLENGE_ANSWER_KEY, None)
+        return True, None
+
+    app.logger.info("Fallback challenge answered incorrectly; request rejected.")
+    return False, "The anti-spam answer was incorrect. Please try again."
 
 
 def _send_html_email_safe(
@@ -546,15 +703,54 @@ def home():
 
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
+    captcha_available = bool(CAPTCHA_SETTINGS.site_key and CAPTCHA_SETTINGS.secret_key)
+
     if request.method == "POST":
-        name = request.form.get("name")
-        email = request.form.get("email")
-        phone = request.form.get("phone")
-        message_body = request.form.get("message")
+        token = request.form.get("form_token")
+        honeypot_value = request.form.get("company")
+        is_valid, validation_message = _validate_contact_form_submission(
+            token=token,
+            honeypot_value=honeypot_value,
+        )
+
+        if not is_valid:
+            flash(validation_message or "We could not verify your submission. Please try again.")
+            session.pop(CONTACT_FORM_TOKEN_SESSION_KEY, None)
+            session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
+            return redirect(url_for("contact"))
+
+        if captcha_available:
+            captcha_response = request.form.get("h-captcha-response")
+            remote_addr = request.headers.get("X-Forwarded-For", request.remote_addr)
+            captcha_valid, captcha_message = _verify_hcaptcha(captcha_response, remote_addr)
+
+            if not captcha_valid:
+                flash(captcha_message or "CAPTCHA verification failed. Please try again.")
+                session.pop(CONTACT_FORM_TOKEN_SESSION_KEY, None)
+                session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
+                return redirect(url_for("contact"))
+        else:
+            challenge_answer = request.form.get("challenge_answer")
+            challenge_valid, challenge_message = _validate_fallback_challenge(challenge_answer)
+
+            if not challenge_valid:
+                flash(challenge_message or "Please retry the anti-spam question.")
+                session.pop(CONTACT_FORM_TOKEN_SESSION_KEY, None)
+                session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
+                return redirect(url_for("contact"))
+
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip()
+        phone = (request.form.get("phone") or "").strip()
+        message_body = (request.form.get("message") or "").strip()
         consent = request.form.get("consent")
 
         if not (name and email and phone and message_body and consent):
             flash("Please fill out all fields and provide consent.")
+            return redirect(url_for("contact"))
+
+        if len(message_body) < CONTACT_FORM_MIN_MESSAGE_LENGTH:
+            flash("Please include a little more detail in your message so we can assist effectively.")
             return redirect(url_for("contact"))
 
         safe_name = escape(name)
@@ -579,9 +775,11 @@ def contact():
             flash("Message captured but routing is misconfigured. We will reach out soon.")
             return redirect(url_for("contact"))
 
+        submission_time = datetime.now(timezone.utc)
+
         if _send_html_email_safe(
             context="contact form notification",
-            subject=f"New Contact Form Submission from {name}",
+            subject=f"New Contact Form Submission from {safe_name}",
             recipients=[MAIL_SETTINGS.owner_recipient],
             html_body=email_body,
             reply_to=email,
@@ -593,9 +791,24 @@ def contact():
                 "Sorry, there was an error sending your message. Please try again later or contact "
                 f"{fallback_contact}."
             )
+        session[CONTACT_FORM_LAST_SUBMISSION_KEY] = submission_time.timestamp()
+        session.pop(CONTACT_FORM_TOKEN_SESSION_KEY, None)
+        session.pop(CONTACT_FORM_TIME_SESSION_KEY, None)
         return redirect(url_for("contact"))
 
-    return render_template("contact.html")
+    fallback_challenge_question = None
+    if captcha_available:
+        session.pop(CONTACT_FORM_CHALLENGE_SESSION_KEY, None)
+        session.pop(CONTACT_FORM_CHALLENGE_ANSWER_KEY, None)
+    else:
+        fallback_challenge_question = _issue_fallback_challenge()
+
+    return render_template(
+        "contact.html",
+        form_token=_issue_contact_form_token(),
+        captcha_site_key=CAPTCHA_SETTINGS.site_key,
+        fallback_challenge_question=fallback_challenge_question,
+    )
 
 
 if __name__ == "__main__":
