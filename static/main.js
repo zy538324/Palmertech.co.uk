@@ -20,6 +20,78 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Responsive navigation toggling for mobile and tablet layouts
+    const navToggle = document.querySelector('.navbar-toggle');
+    const navList = document.getElementById('primary-navigation');
+    const dropdownParents = Array.from(document.querySelectorAll('.dropdown'));
+
+    const closeDropdowns = () => {
+        dropdownParents.forEach(drop => {
+            drop.classList.remove('dropdown-open');
+            const trigger = drop.querySelector('.dropbtn');
+            if (trigger) {
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        });
+    };
+
+    const closeNavigation = () => {
+        if (!navList || !navToggle) {
+            closeDropdowns();
+            return;
+        }
+        navList.classList.remove('nav-list--open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        closeDropdowns();
+    };
+
+    if (navToggle && navList) {
+        navToggle.addEventListener('click', () => {
+            const isOpen = navList.classList.toggle('nav-list--open');
+            navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (!isOpen) {
+                closeDropdowns();
+            }
+        });
+
+        const navLinks = navList.querySelectorAll('a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.matchMedia('(max-width: 992px)').matches && !link.classList.contains('dropbtn')) {
+                    closeNavigation();
+                }
+            });
+        });
+    }
+
+    dropdownParents.forEach(drop => {
+        const trigger = drop.querySelector('.dropbtn');
+        if (!trigger) {
+            return;
+        }
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.addEventListener('click', event => {
+            if (window.matchMedia('(max-width: 992px)').matches) {
+                event.preventDefault();
+                const isOpen = drop.classList.toggle('dropdown-open');
+                trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            }
+        });
+    });
+
+    window.addEventListener('resize', () => {
+        if (!window.matchMedia('(max-width: 992px)').matches) {
+            closeNavigation();
+        }
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && navList?.classList.contains('nav-list--open')) {
+            closeNavigation();
+            navToggle?.focus();
+        }
+    });
+
     // Swipe detection for interactive cards (touch devices)
     const interactiveCards = document.querySelectorAll('.service-card.interactive, .price-card.interactive');
     interactiveCards.forEach(card => {
