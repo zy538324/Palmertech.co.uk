@@ -134,21 +134,27 @@
 <body>
     <header>
         <div class="hero">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Palmertech Logo" class="hero-logo" style="display:block;margin:0 auto 1em auto;width:160px;height:150px;object-fit:contain;box-shadow:0 4px 24px rgba(0,0,0,0.18);">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Palmertech Logo" class="hero-logo" loading="lazy">
             
             <p class="site-tagline">Developer in Modern Web Technologies</p>
         </div>
-        <nav class="navbar">
-            <ul class="nav-list">
+        <nav class="navbar" aria-label="Primary navigation">
+            <button class="navbar-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation">
+                <span class="sr-only">Toggle site navigation</span>
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+            </button>
+            <ul class="nav-list" id="primary-navigation" data-collapsible="true">
                 <li><a href="/">Home</a></li>
                 <li><a href="/about">About</a></li>
                 <li class="dropdown">
-                    <a href="/services" class="dropbtn">Services</a>
-                    <div class="dropdown-content">
-                        <a href="/services/web-mobile">Web &amp; Mobile Development</a>
-                        <a href="/services/api">API Development</a>
-                        <a href="/services/php-html-css-js">PHP, HTML, CSS, JS, Java, C#</a>
-                        <a href="/services/support">Maintenance &amp; Support</a>
+                    <a href="/services" class="dropbtn" aria-expanded="false">Services</a>
+                    <div class="dropdown-content" role="menu">
+                        <a href="/services/web-mobile" role="menuitem">Web &amp; Mobile Development</a>
+                        <a href="/services/api" role="menuitem">API Development</a>
+                        <a href="/services/php-html-css-js" role="menuitem">PHP, HTML, CSS, JS, Java, C#</a>
+                        <a href="/services/support" role="menuitem">Maintenance &amp; Support</a>
                     </div>
                 </li>
                 <li><a href="/portfolio">Portfolio</a></li>
@@ -166,7 +172,7 @@
 
     <footer>
         <div class="footer-branding">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Palmertech Logo" class="footer-logo" style="width:64px;height:64px;object-fit:contain;margin-bottom:0.5em;">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Palmertech Logo" class="footer-logo" loading="lazy">
             <div class="footer-social">
                 <a href="https://facebook.com/profile.php?id=61579818240590" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook-f social-icon"></i></a>
                 <a href="https://instagram.com" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram social-icon"></i></a>
