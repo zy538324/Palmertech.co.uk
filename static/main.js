@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const closeNavigation = () => {
-        document.body.classList.remove('nav-open');
         if (!navList || !navToggle) {
             closeDropdowns();
             return;
@@ -50,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
         navToggle.addEventListener('click', () => {
             const isOpen = navList.classList.toggle('nav-list--open');
             navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            document.body.classList.toggle('nav-open', isOpen);
             if (!isOpen) {
                 closeDropdowns();
             }

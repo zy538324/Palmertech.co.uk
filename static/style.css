@@ -1248,10 +1248,6 @@ header {
     display: block;
 }
 
-body.nav-open {
-    overflow: hidden;
-}
-
 @media (min-width: 993px) {
     .navbar {
         justify-content: center;
