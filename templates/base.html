@@ -1,188 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Title -->
-  <title>{% block title %}Palmertech | UK Web Developer for Websites, Web Apps & Mobile Apps{% endblock %}</title>
+  <!-- SEO Title -->
+  <title>{% block title %}Palmertech | UK Freelance Web Developer for Modern Websites, Web Apps & Mobile Solutions{% endblock %}</title>
 
-  <!-- Primary Meta -->
-  <meta name="description" content="Palmertech is a UK-based web developer delivering modern websites, scalable web apps, and mobile app solutions. Expert in Python, Flask, PHP, JavaScript, C#, HTML, CSS and API development. Providing bespoke solutions, hosting, support, and ongoing maintenance.">
-  <meta name="keywords" content="Web Developer UK, Website Development, Web App Developer, Mobile App Developer, Python Developer, Flask, PHP, JavaScript, C#, HTML, CSS, API Development, Hosting, Support, Maintenance, Palmertech">
+  <!-- Primary Meta Description -->
+  <meta name="description" content="Hire Palmertech – an experienced UK freelance web developer creating high-performance websites, web apps, and mobile apps. We specialise in Python, Flask, PHP, JavaScript, and secure API development for small businesses and organisations across the UK.">
+
+  <!-- Targeted Keywords (Long-Tail SEO Focus) -->
+  <meta name="keywords" content="freelance web developer UK, web developer Somerset, website design UK, custom web app developer, Python Flask developer UK, mobile app developer UK, API integration specialist, website hosting and maintenance, Palmertech web development, hire web developer">
 
   <!-- Indexing -->
-  <meta name="robots" content="index, follow">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <link rel="canonical" href="https://palmertech.co.uk/">
 
-  <!-- Open Graph / Facebook -->
-  <meta property="og:title" content="Palmertech | UK Web Developer for Websites, Web Apps & Mobile Apps">
-  <meta property="og:description" content="UK-based web development specialist building websites, custom web apps, and mobile apps. Skilled in Python, Flask, PHP, JavaScript and more. Hosting, support & maintenance included.">
-  <meta property="og:image" content="https://palmertech.co.uk/static/logo.png">
-  <meta property="og:url" content="https://palmertech.co.uk/">
+  <!-- Open Graph -->
+  <meta property="og:locale" content="en_GB">
   <meta property="og:type" content="website">
+  <meta property="og:title" content="Palmertech | Expert UK Web Developer & App Creator">
+  <meta property="og:description" content="UK freelance web developer offering bespoke websites, web apps, and mobile app solutions. End-to-end support including hosting, security and maintenance.">
+  <meta property="og:url" content="https://palmertech.co.uk/">
+  <meta property="og:site_name" content="Palmertech">
+  <meta property="og:image" content="https://palmertech.co.uk/static/og-image.webp">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Palmertech | UK Web Developer for Websites, Web Apps & Mobile Apps">
-  <meta name="twitter:description" content="Expert web development in websites, custom web apps, and mobile apps. Python, Flask, PHP, JavaScript, C# and more. Bespoke solutions with hosting & support.">
-  <meta name="twitter:image" content="https://palmertech.co.uk/static/logo.png">
+  <meta name="twitter:title" content="Palmertech | UK Web Developer & Web App Specialist">
+  <meta name="twitter:description" content="Professional freelance UK web developer creating websites, web apps and mobile apps. Python, Flask, PHP, JavaScript & API integrations.">
+  <meta name="twitter:image" content="https://palmertech.co.uk/static/og-image.webp">
+
+  <!-- Geo Meta Tags for Local SEO -->
+  <meta name="geo.region" content="GB-ENG">
+  <meta name="geo.placename" content="Somerset, United Kingdom">
+  <meta name="geo.position" content="51.0211;-3.0986">
+  <meta name="ICBM" content="51.0211, -3.0986">
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='logo.ico') }}">
-  <!-- Styles -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- Styles & Performance -->
+  <link rel="preload" href="{{ url_for('static', filename='style.css') }}" as="style">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous">
+
+  <!-- JSON-LD Schema for LocalBusiness + WebDeveloper + Person -->
   <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Palmertech",
-  "url": "https://palmertech.co.uk/",
-  "logo": "https://palmertech.co.uk/static/logo.png",
-  "image": "https://palmertech.co.uk/static/logo.png",
-  "description": "Palmertech is a UK-based web development business providing expert websites, custom web apps, and mobile app solutions. Skilled in Python, Flask, PHP, JavaScript, C#, HTML, CSS and API development. Services include hosting, support, and ongoing maintenance.",
-  "telephone": "+44 1823 ",
-  "email": "contact@palmertech.co.uk",
-  "address": {
-    "@type": "PostalAddress",
-    "addressCountry": "UK"
-  },
-  "areaServed": {
-    "@type": "Country",
-    "name": "United Kingdom"
-  },
-  "sameAs": [
-    "https://www.linkedin.com/company/palmertech",
-    "https://github.com/palmertech"
-  ],
-  "priceRange": "££",
-  "founder": {
-    "@type": "Person",
-    "name": "Matt Palmer"
-  },
-  "foundingDate": "2020",
-  "servesCuisine": "",
-  "serviceType": [
-    "Website Development",
-    "Web App Development",
-    "Mobile App Development",
-    "API Development",
-    "Hosting & Domain Management",
-    "Support & Maintenance"
-  ],
-  "hasOfferCatalog": {
-    "@type": "OfferCatalog",
-    "name": "Palmertech Services",
-    "itemListElement": [
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Website Development",
-          "description": "Design and build bespoke websites with modern, responsive design."
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Web App Development",
-          "description": "Custom web applications built with Python, Flask, PHP, and JavaScript."
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Mobile App Development",
-          "description": "Cross-platform mobile apps for iOS and Android with modern frameworks."
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "API Development",
-          "description": "Robust API design and integration for scalable web and mobile systems."
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Hosting & Domain Management",
-          "description": "Reliable hosting, domain setup, and full server management."
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Support & Maintenance",
-          "description": "Ongoing support, updates, and security for your web and mobile solutions."
-        }
-      }
-    ]
+  {
+    "@context": "https://schema.org",
+    "@type": "WebDevelopmentCompany",
+    "name": "Palmertech",
+    "url": "https://palmertech.co.uk/",
+    "logo": "https://palmertech.co.uk/static/logo.png",
+    "image": "https://palmertech.co.uk/static/og-image.webp",
+    "description": "Palmertech is a UK-based freelance web development business delivering high-quality websites, scalable web apps, and mobile applications for clients across the UK.",
+    "founder": {
+      "@type": "Person",
+      "name": "Matt Palmer",
+      "jobTitle": "Lead Web Developer",
+      "sameAs": [
+        "https://www.linkedin.com/company/palmertech",
+        "https://github.com/palmertech"
+      ]
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Wellington",
+      "addressRegion": "Somerset",
+      "addressCountry": "GB"
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "United Kingdom"
+    },
+    "telephone": "+44 1823 000000",
+    "email": "contact@palmertech.co.uk",
+    "priceRange": "££",
+    "serviceType": [
+      "Website Development",
+      "Web App Development",
+      "Mobile App Development",
+      "API Development",
+      "Hosting & Domain Management",
+      "Maintenance & Support"
+    ],
+    "offers": {
+      "@type": "OfferCatalog",
+      "name": "Palmertech Web Development Services",
+      "itemListElement": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Custom Website Development", "description": "Responsive websites designed and built for speed, SEO and scalability." }},
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Web App Development", "description": "Bespoke web apps powered by Flask, Django, and modern frameworks." }},
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Mobile App Development", "description": "Cross-platform apps for iOS & Android built with progressive frameworks." }},
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "API Integration & Automation", "description": "Developing secure, scalable APIs and system integrations." }},
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Website Hosting & SSL Setup", "description": "UK-based secure hosting, domain management, and SSL configuration." }},
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Ongoing Support & Maintenance", "description": "Long-term updates, bug fixes, and cybersecurity support." }}
+      ]
+    }
   }
-}
-</script>
+  </script>
 
   {% block head %}{% endblock %}
 </head>
-<body>
-    <header>
-        <div class="hero">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Palmertech Logo" class="hero-logo" loading="lazy">
-            
-            <p class="site-tagline">Developer in Modern Web Technologies</p>
-        </div>
-        <nav class="navbar" aria-label="Primary navigation">
-            <button class="navbar-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation">
-                <span class="sr-only">Toggle site navigation</span>
-                <span class="navbar-toggle-bar"></span>
-                <span class="navbar-toggle-bar"></span>
-                <span class="navbar-toggle-bar"></span>
-            </button>
-            <ul class="nav-list" id="primary-navigation" data-collapsible="true">
-                <li><a href="/">Home</a></li>
-                <li><a href="/about">About</a></li>
-                <li class="dropdown">
-                    <a href="/services" class="dropbtn" aria-expanded="false">Services</a>
-                    <div class="dropdown-content" role="menu">
-                        <a href="/services/web-mobile" role="menuitem">Web &amp; Mobile Development</a>
-                        <a href="/services/api" role="menuitem">API Development</a>
-                        <a href="/services/php-html-css-js" role="menuitem">PHP, HTML, CSS, JS, Java, C#</a>
-                        <a href="/services/support" role="menuitem">Maintenance &amp; Support</a>
-                    </div>
-                </li>
-                <li><a href="/portfolio">Portfolio</a></li>
-                <!--<li><a href="/testimonials">Testimonials</a></li>-->
-                <li><a href="/faq">FAQ</a></li>
-                <li><a href="/pricing">Pricing</a></li>
-                <li><a href="/terms">Terms</a></li>
-                <li><a href="/contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
 
-    <footer>
-        <div class="footer-branding">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Palmertech Logo" class="footer-logo" loading="lazy">
-            <div class="footer-social">
-                <a href="https://www.facebook.com/palmertechweb" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook-f social-icon"></i></a>
-                <a href="https://www.instagram.com/palmertechweb/" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram social-icon"></i></a>
-                
-                <!-- Add more social icons as needed -->
-            </div>
-                <p>&copy; {{ 2025 }} Palmertech. All rights reserved.</p>
-            </div>
-        </footer>
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
-    {% block scripts %}{% endblock %}
+<body>
+  <header role="banner">
+    <div class="hero">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Palmertech Web Developer Logo" class="hero-logo" loading="lazy">
+      <p class="site-tagline">Professional Web Developer in Somerset, UK — Websites, Web Apps & Mobile Apps</p>
+    </div>
+    <nav class="navbar" role="navigation" aria-label="Primary">
+      <button class="navbar-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="navbar-toggle-bar"></span>
+        <span class="navbar-toggle-bar"></span>
+        <span class="navbar-toggle-bar"></span>
+      </button>
+      <ul class="nav-list" id="primary-navigation" data-collapsible="true">
+        <li><a href="/">Home</a></li>
+        <li><a href="/about">About</a></li>
+        <li class="dropdown">
+          <a href="/services" class="dropbtn" aria-expanded="false">Services</a>
+          <div class="dropdown-content" role="menu">
+            <a href="/services/web-mobile" role="menuitem">Web &amp; Mobile Development</a>
+            <a href="/services/api" role="menuitem">API Development</a>
+            <a href="/services/php-html-css-js" role="menuitem">Full Stack Development</a>
+            <a href="/services/support" role="menuitem">Maintenance &amp; Support</a>
+          </div>
+        </li>
+        <li><a href="/portfolio">Portfolio</a></li>
+        <li><a href="/faq">FAQ</a></li>
+        <li><a href="/pricing">Pricing</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="content" role="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer role="contentinfo">
+    <div class="footer-branding">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Palmertech Web Developer Logo" class="footer-logo" loading="lazy">
+      <p>Building fast, secure, and modern websites across the UK. Trusted by small businesses and creatives since 2020.</p>
+      <div class="footer-social">
+        <a href="https://www.facebook.com/palmertechweb" target="_blank" rel="noopener" aria-label="Palmertech Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://www.instagram.com/palmertechweb/" target="_blank" rel="noopener" aria-label="Palmertech Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://www.linkedin.com/company/palmertech" target="_blank" rel="noopener" aria-label="Palmertech LinkedIn"><i class="fab fa-linkedin"></i></a>
+      </div>
+      <p>&copy; {{ 2025 }} Palmertech. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='main.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>
