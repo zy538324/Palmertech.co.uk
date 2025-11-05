@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Portfolio | Palmertech{% endblock %}
+
 {% block content %}
 <section class="highlight">
     <h2>Portfolio</h2>
+    <p class="intro">
+        A selection of recent projects and in-house developments by Palmertech — ranging from live client sites to prebuilt frameworks designed to accelerate delivery for our customers.
+    </p>
+
     <div class="portfolio-grid">
+        <!-- Existing portfolio entries -->
         <div class="portfolio-card">
             <div class="portfolio-preview" style="--preview-scale:0.24; --preview-width:1440px; --preview-height:960px; --preview-top:-32;">
                 <iframe src="https://auroraandoak.co.uk" title="Aurora and Oak live preview" loading="lazy" referrerpolicy="no-referrer"></iframe>
@@ -11,15 +17,13 @@
                     Live preview
                 </button>
             </div>
-           
             <p>Photography showcase featuring curated galleries and booking enquiries.</p>
             <div class="portfolio-actions">
-                <button type="button" class="preview-btn link" data-preview-url="https://auroraandoak.co.uk" data-preview-title="Aurora and Oak">
-                    Live preview
-                </button>
+                <button type="button" class="preview-btn link" data-preview-url="https://auroraandoak.co.uk" data-preview-title="Aurora and Oak">Live preview</button>
                 <a href="https://auroraandoak.co.uk" target="_blank" rel="noopener" class="portfolio-visit">Visit site</a>
             </div>
         </div>
+
         <div class="portfolio-card">
             <div class="portfolio-preview" style="--preview-scale:0.26; --preview-width:1440px; --preview-height:960px; --preview-top:-28;">
                 <iframe src="https://errant-arts.co.uk" title="Errant Arts live preview" loading="lazy" referrerpolicy="no-referrer"></iframe>
@@ -27,15 +31,13 @@
                     Live preview
                 </button>
             </div>
-            
             <p>Creative collective portfolio highlighting digital art commissions.</p>
             <div class="portfolio-actions">
-                <button type="button" class="preview-btn link" data-preview-url="https://errant-arts.co.uk" data-preview-title="Errant Arts">
-                    Live preview
-                </button>
+                <button type="button" class="preview-btn link" data-preview-url="https://errant-arts.co.uk" data-preview-title="Errant Arts">Live preview</button>
                 <a href="https://errant-arts.co.uk" target="_blank" rel="noopener" class="portfolio-visit">Visit site</a>
             </div>
         </div>
+
         <div class="portfolio-card">
             <div class="portfolio-preview" style="--preview-scale:0.28; --preview-width:1440px; --preview-height:960px; --preview-top:-48;">
                 <iframe src="https://homegrub-staging-495253095895.europe-west1.run.app/" title="HomeGrubHub live preview" loading="lazy" referrerpolicy="no-referrer"></iframe>
@@ -43,89 +45,98 @@
                     Live preview
                 </button>
             </div>
-            
             <p>Kitchen companion for UK families with meal planning, smart shopping, and pantry tools.</p>
             <div class="portfolio-actions">
-                <button type="button" class="preview-btn link" data-preview-url="https://homegrub-staging-495253095895.europe-west1.run.app/" data-preview-title="HomeGrubHub">
-                    Live preview
-                </button>
+                <button type="button" class="preview-btn link" data-preview-url="https://homegrub-staging-495253095895.europe-west1.run.app/" data-preview-title="HomeGrubHub">Live preview</button>
                 <a href="https://homegrub-staging-495253095895.europe-west1.run.app/" target="_blank" rel="noopener" class="portfolio-visit">Preview staging</a>
             </div>
         </div>
-        <div class="portfolio-card">
-    <div class="portfolio-preview" style="--preview-scale:0.28; --preview-width:1440px; --preview-height:960px; --preview-top:-48;">
-        <iframe 
-            src="https://craftedbycrazies-515840465027.europe-west1.run.app/" 
-            title="CraftedByCrazies live preview" 
-            loading="lazy" 
-            referrerpolicy="no-referrer">
-        </iframe>
-        <button 
-            type="button" 
-            class="preview-btn" 
-            data-preview-url="https://craftedbycrazies-515840465027.europe-west1.run.app/" 
-            data-preview-title="CraftedByCrazies">
-            Live preview
-        </button>
-    </div>
-    
-    <p>Vibrant handmade e-commerce platform showcasing sustainable, upcycled creations — from fabric crafts to woollen decor and gifts. Features product browsing, cart, and account management.</p>
-    <div class="portfolio-actions">
-        <button 
-            type="button" 
-            class="preview-btn link" 
-            data-preview-url="https://craftedbycrazies-515840465027.europe-west1.run.app/" 
-            data-preview-title="CraftedByCrazies">
-            Live preview
-        </button>
-        <a 
-            href="https://craftedbycrazies-515840465027.europe-west1.run.app/" 
-            target="_blank" 
-            rel="noopener" 
-            class="portfolio-visit">
-            Visit development site
-        </a>
-    </div>
-</div>
 
         <div class="portfolio-card">
-    <div class="portfolio-preview" style="--preview-scale:0.28; --preview-width:1440px; --preview-height:960px; --preview-top:-40;">
-        <iframe 
-            src="https://rlwwriting.co.uk" 
-            title="RLW Writing live preview" 
-            loading="lazy" 
-            referrerpolicy="no-referrer">
-        </iframe>
-        <button 
-            type="button" 
-            class="preview-btn" 
-            data-preview-url="https://rlwwriting.co.uk" 
-            data-preview-title="RLW Writing">
-            Live preview
-        </button>
-    </div>
+            <div class="portfolio-preview" style="--preview-scale:0.28; --preview-width:1440px; --preview-height:960px; --preview-top:-48;">
+                <iframe src="https://craftedbycrazies-515840465027.europe-west1.run.app/" title="CraftedByCrazies live preview" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                <button type="button" class="preview-btn" data-preview-url="https://craftedbycrazies-515840465027.europe-west1.run.app/" data-preview-title="CraftedByCrazies">
+                    Live preview
+                </button>
+            </div>
+            <p>Vibrant handmade e-commerce platform showcasing sustainable, upcycled creations — from fabric crafts to woollen décor and gifts. Includes product browsing, cart, and account management.</p>
+            <div class="portfolio-actions">
+                <button type="button" class="preview-btn link" data-preview-url="https://craftedbycrazies-515840465027.europe-west1.run.app/" data-preview-title="CraftedByCrazies">Live preview</button>
+                <a href="https://craftedbycrazies-515840465027.europe-west1.run.app/" target="_blank" rel="noopener" class="portfolio-visit">Visit development site</a>
+            </div>
+        </div>
 
-    <p>Author and creative writing portfolio for R.L.W. — showcasing short stories, poetry, and upcoming works, with a clean and immersive reading layout.</p>
-    <div class="portfolio-actions">
-        <button 
-            type="button" 
-            class="preview-btn link" 
-            data-preview-url="https://rlwwriting.co.uk" 
-            data-preview-title="RLW Writing">
-            Live preview
-        </button>
-        <a 
-            href="https://rlwwriting.co.uk" 
-            target="_blank" 
-            rel="noopener" 
-            class="portfolio-visit">
-            Visit site
-        </a>
-    </div>
-</div>
-
+        <div class="portfolio-card">
+            <div class="portfolio-preview" style="--preview-scale:0.28; --preview-width:1440px; --preview-height:960px; --preview-top:-40;">
+                <iframe src="https://rlwwriting.co.uk" title="RLW Writing live preview" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                <button type="button" class="preview-btn" data-preview-url="https://rlwwriting.co.uk" data-preview-title="RLW Writing">Live preview</button>
+            </div>
+            <p>Author and creative writing portfolio for R.L.W. — showcasing short stories, poetry, and upcoming works, with a clean and immersive reading layout.</p>
+            <div class="portfolio-actions">
+                <button type="button" class="preview-btn link" data-preview-url="https://rlwwriting.co.uk" data-preview-title="RLW Writing">Live preview</button>
+                <a href="https://rlwwriting.co.uk" target="_blank" rel="noopener" class="portfolio-visit">Visit site</a>
+            </div>
+        </div>
     </div>
 </section>
+
+<!-- ─────────────────────────────────────────────── -->
+<!-- WordPress Template Library (Palmertech-only)   -->
+<!-- ─────────────────────────────────────────────── -->
+<section class="highlight templates">
+  <h2>Prebuilt &amp; Predesigned WordPress Templates</h2>
+  <p class="intro">
+    A curated library of in-house WordPress templates designed and maintained by Palmertech.
+    These are <strong>exclusive to Palmertech customers</strong> as deployment accelerators and are
+    not offered for public resale or download.
+  </p>
+
+  {# Optional: friendly names per template number — fill in as you go #}
+  {% set template_titles = {
+      1: "Advertiser", 2: "Author", 3: "Automotive", 4: "Business", 5: "Campaign",
+      6: "Charity", 7: "Charity Shop", 8: "Education", 9: "Event", 10: "Festival",
+      11: "Finance", 12: "Fitness Pro", 13: "Healthcare", 14: "Interiors", 15: "Legal",
+      16: "Magazine", 17: "Membership", 18: "Music", 19: "Nursery", 20: "Pet Care",
+      21: "Photography", 22: "Podcast", 23: "Portfolio", 24: "Property Dev",
+      25: "Real Estate", 26: "Recruitment", 27: "Restaurant", 28: "SaaS", 29: "Shop",
+      30: "Spa", 31: "Sports", 32: "Tech Services", 33: "Trades", 34: "Weddings", 35: "Palmertech One"
+  } %}
+
+  <div class="portfolio-grid">
+    {% for i in range(1, 36) %}
+      {% set subdomain = "https://template%d.tamsilcms.com" % i %}
+      {% set label = template_titles.get(i, "Template " ~ i) %}
+      <div class="portfolio-card">
+        <div class="portfolio-preview"
+             style="--preview-scale:0.28; --preview-width:1440px; --preview-height:960px; --preview-top:-48;">
+          <iframe src="{{ subdomain }}" title="Palmertech {{ label }} Template — live preview"
+                  loading="lazy" referrerpolicy="no-referrer"></iframe>
+          <button type="button" class="preview-btn"
+                  data-preview-url="{{ subdomain }}"
+                  data-preview-title="Palmertech {{ label }} Template">
+            Live preview
+          </button>
+        </div>
+
+        <p><strong>Palmertech {{ label }}</strong> — predesigned WordPress template available for Palmertech client projects.</p>
+
+        <div class="portfolio-actions">
+          <button type="button" class="preview-btn link"
+                  data-preview-url="{{ subdomain }}"
+                  data-preview-title="Palmertech {{ label }} Template">
+            Live preview
+          </button>
+          <a href="{{ subdomain }}" target="_blank" rel="noopener" class="portfolio-visit">
+            Open demo
+          </a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+
+<!-- Modal Preview -->
 <div id="portfolioPreviewModal" class="portfolio-modal" hidden>
     <div class="portfolio-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="portfolioPreviewTitle">
         <button type="button" class="portfolio-modal-close" aria-label="Close preview">&times;</button>
