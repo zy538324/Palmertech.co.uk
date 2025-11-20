@@ -1,0 +1,74 @@
+<?php
+/**
+ * Front page template matching the original Flask homepage layout.
+ *
+ * @package Palmertech WP
+ */
+
+global $post;
+get_header();
+?>
+<section class="intro showcase">
+    <div class="showcase-imgs">
+        <div class="showcase-placeholder" aria-hidden="true">
+            <span>secure</span>
+            <span>clean</span>
+            <span>scalable</span>
+        </div>
+    </div>
+    <h2>Passionate Developer</h2>
+    <p class="animated-text">Your go-to for Python &amp; Flutter<br>
+    With several years of hands-on experience, I enjoy developing dynamic, data-driven web and mobile apps using Python and Flutter. I aim for clear design, efficient code, and continuous improvement. <strong>Let’s create something brilliant together!</strong></p>
+</section>
+
+<section class="services highlight">
+    <h3>What I Do</h3>
+    <div class="service-cards">
+        <div class="card service-card interactive">
+            <span class="fa-stack fa-2x" style="margin-bottom:0.7em; color:#2196f3;">
+                <i class="fas fa-database fa-stack-2x"></i>
+                <i class="fas fa-globe fa-stack-1x"></i>
+            </span>
+            <h4>Database-driven Web Applications</h4>
+            <p>Modern, scalable, and secure web solutions tailored to your business needs.</p>
+        </div>
+        <div class="card service-card interactive">
+            <span class="fa-stack fa-2x" style="margin-bottom:0.7em; color:#009688;">
+                <i class="fas fa-mobile-alt fa-stack-2x"></i>
+                <i class="fab fa-android fa-stack-1x"></i>
+            </span>
+            <h4>Mobile App Development with Flutter</h4>
+            <p>Beautiful cross-platform mobile apps with smooth performance and great UX.</p>
+        </div>
+        <div class="card service-card interactive">
+            <span class="fa-stack fa-2x" style="margin-bottom:0.7em; color:#43e97b;">
+                <i class="fas fa-plug fa-stack-2x"></i>
+                <i class="fas fa-code fa-stack-1x"></i>
+            </span>
+            <h4>Custom API Development</h4>
+            <p>Powerful APIs to connect your apps and automate your workflows.</p>
+        </div>
+    </div>
+</section>
+
+<section class="hosting highlight">
+    <h3>Hosting &amp; Support</h3>
+    <div class="service-cards">
+        <div class="card service-card interactive">
+            <h4>Managed Hosting</h4>
+            <p>Reliable, secure hosting for your web app or website. Includes SSL, backups, and performance monitoring.</p>
+            <p><strong>From £20/month</strong></p>
+        </div>
+        <div class="card service-card interactive">
+            <h4>Maintenance &amp; Updates</h4>
+            <p>Regular updates, bug fixes, and plugin/theme management to keep your site running smoothly.</p>
+            <p><strong>From £35/hour or retainer</strong></p>
+        </div>
+        <div class="card service-card interactive">
+            <h4>Support</h4>
+            <p>Support in under 24 hours for your web app or website. SLA options available for business-critical projects.</p>
+            <p>Send an email for a quote</p>
+        </div>
+    </div>
+</section>
+<?php get_footer(); ?>

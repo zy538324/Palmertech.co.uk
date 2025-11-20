@@ -1,0 +1,13 @@
+/*
+Theme Name: Palmertech WP
+Theme URI: https://palmertech.co.uk/
+Author: Matt Palmer (Palmertech)
+Author URI: https://palmertech.co.uk/
+Description: WordPress theme migration of the Palmertech marketing site with matching layout, styling, and navigation.
+Version: 1.0.0
+License: MIT
+License URI: https://opensource.org/licenses/MIT
+Text Domain: palmertech-wp
+*/
+
+/* Root file intentionally light; main styles loaded via assets/css/theme.css */
