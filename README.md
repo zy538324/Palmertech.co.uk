@@ -11,6 +11,7 @@ This project is a Python Flask implementation of the Palmertech homepage, featur
 - `app.py`: Main Flask application
 - `templates/`: HTML templates
 - `static/`: Static assets (CSS, images)
+- `wordpress/themes/palmertech-wp/`: WordPress theme mirroring the Flask layout for cloud hosting import
 
 ## How to Run
 1. Create a virtual environment (optional but recommended).
@@ -18,6 +19,13 @@ This project is a Python Flask implementation of the Palmertech homepage, featur
 3. Run the app: `python app.py` (starts Uvicorn on `0.0.0.0:8080` by default)
 4. Alternatively, run directly with Uvicorn: `uvicorn app:asgi_app --host 0.0.0.0 --port 8080`
 5. Visit `http://localhost:8080` in your browser (override with the `PORT` environment variable if needed)
+
+## Using the WordPress Theme
+1. Copy `wordpress/themes/palmertech-wp` into your WordPress installation under `wp-content/themes/`.
+2. Ensure file permissions allow WordPress to read the assets (recommended: owner `www-data` with `755` directories and `644` files).
+3. Activate **Palmertech WP** from the WordPress admin Appearance → Themes screen.
+4. Assign a menu to the **Primary Navigation** location to populate the header links.
+5. Set a static homepage (Settings → Reading) to use the bundled `front-page.php` layout. Other pages will use `page.php` while retaining the shared header/footer styling.
 
 ## Environment Variables
 Create a `.env` file (or configure environment variables in Cloud Run) with at least the following values:
